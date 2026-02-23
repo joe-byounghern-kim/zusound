@@ -1,137 +1,178 @@
-# ✨ zusound: Hear Your State Changes! ✨
+# 🔊 zusound
 
-[![npm version](https://img.shields.io/npm/v/zusound?style=flat-square)](https://www.npmjs.com/package/zusound)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
-[![GitHub Pages Deploy](https://img.shields.io/github/deployments/behoney/zusound/github-pages?label=Examples%20Deploy&style=flat-square&logo=github)](https://behoney.github.io/zusound/)
+[![npm version](https://img.shields.io/npm/v/zusound)](https://www.npmjs.com/package/zusound)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/zusound)](https://bundlephobia.com/package/zusound)
+[![CI](https://github.com/joe-byounghern-kim/zusound/actions/workflows/ci.yml/badge.svg)](https://github.com/joe-byounghern-kim/zusound/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-🚀 [Live Examples](https://behoney.github.io/zusound/) & [Demo](https://stackblitz.com/edit/zusound-example?file=src%2FCounter.tsx) are available!
+Hear your state changes. Debug faster.
 
-zusound is a lightweight [Zustand](https://github.com/pmndrs/zustand) middleware that transforms state changes into sound. It provides real-time, sonic feedback for your app's state transitions, making debugging and development more intuitive and fun.
+`zusound` is a browser-first Zustand middleware that turns state diffs into short, meaningful Web Audio cues.
 
-## 🚀 Installation
+- Zero runtime dependencies (besides Zustand peer dependency)
+- Safe default: disabled in production unless explicitly enabled
+- Lightweight diffing and lazy `AudioContext`
+- Optional aesthetics mapping for timbre, pleasantness, and timing behavior
+
+<p align="center">
+  <a href="https://joe-byounghern-kim.github.io/zusound/">
+    <img src="docs/assets/demo-preview.gif" alt="Zusound Signal Lab Demo" width="720" />
+  </a>
+</p>
+
+> **[Try the interactive Signal Lab →](https://joe-byounghern-kim.github.io/zusound/)**
+
+## Why Zusound
+
+When state bugs are temporal, logs are often too late. Audio feedback makes update patterns obvious in real time:
+
+- Infinite loops become rapid-fire bursts
+- Thrashing updates become unstable rhythms
+- Healthy flows become predictable motifs
+
+## Install
 
 ```bash
-# Using npm
 npm install zusound
-
-# Using yarn
-yarn add zusound
-
-# Using pnpm
-pnpm add zusound
-
-# Using bun
-bun add zusound
 ```
 
-### From Source
+Supported Zustand versions: `>=4 <6`.
 
-You can also install it directly from the repository:
+## 60-Second Quick Start
 
-```bash
-# Using npm
-npm install github:behoney/zusound
-
-# Using yarn
-yarn add github:behoney/zusound
-
-# Using pnpm
-pnpm add github:behoney/zusound
-```
-
-For development setup instructions, please see our [Contributing Guidelines](CONTRIBUTING.md).
-
-## 📖 Quick Usage
-
-### Basic Example
+You can use `zusound` as a middleware:
 
 ```typescript
 import { create } from 'zustand'
 import { zusound } from 'zusound'
 
-const useStore = create<{ count: number; inc: () => void }>()(
-  zusound(set => ({
-    count: 0,
-    inc: () => set(state => ({ count: state.count + 1 })),
-  }), { enabled: true })
-)
-```
-
-### With Other Middlewares (TypeScript Safe)
-
-**Best Practice:**
-- Use `zusound` as the **outermost** middleware when composing with others (like `persist`, `devtools`, `immer`).
-- This ensures type safety and avoids TypeScript mutator errors.
-
-```typescript
-import { create } from 'zustand'
-import { devtools, persist } from 'zustand/middleware'
-import { zusound } from 'zusound'
-
-interface TodoStoreType {
-  todos: { id: number; title: string; completed: boolean }[]
-  addTodo: (todo: { id: number; title: string; completed: boolean }) => void
-  removeTodo: (todoId: number) => void
-  todoStatus: (todoId: number) => void
-}
-
-const useTodoStore = create<TodoStoreType>()(
+const useStore = create(
   zusound(
-    devtools(
-      persist(
-        set => ({
-          todos: [],
-          addTodo: todo => set(state => ({ todos: [todo, ...state.todos] })),
-          removeTodo: todoId => set(state => ({ todos: state.todos.filter(t => t.id !== todoId) })),
-          todoStatus: todoId => set(state => ({
-            todos: state.todos.map(t => t.id === todoId ? { ...t, completed: !t.completed } : t)
-          })),
-        }),
-        { name: 'todos' }
-      ),
-      { name: 'TodoStoreDevtools' }
-    ),
-    { enabled: true }
+    (set) => ({
+      count: 0,
+      inc: () => set((state) => ({ count: state.count + 1 })),
+    }),
+    {
+      enabled: true,
+      volume: 0.3,
+    }
   )
 )
 ```
 
-## 🧑‍💻 API
+**Or simply use it as a subscriber to any existing store**:
 
-### `zusound(initializer, options?)`
-- **initializer**: Your Zustand state creator function (with or without other middlewares).
-- **options**: `{ enabled?: boolean }` (default: `false`). Set to `true` to enable sound in production.
+```typescript
+const useStore = create((set) => ({
+  count: 0,
+  inc: () => set((state) => ({ count: state.count + 1 })),
+}))
 
-**Returns:** A Zustand-compatible middleware. Use as the outermost middleware for best TypeScript compatibility.
+// Listen to all changes with default audio settings
+useStore.subscribe(zusound)
+```
 
-## ⚡️ TypeScript Compatibility & Troubleshooting
+For long-lived apps this is usually enough. If you mount/unmount dynamic listeners, use a configured instance via `createZusound()` and call both the store `unsubscribe()` and `instance.cleanup()` when done.
 
-- **Type Safety:** zusound is designed to be type-safe and compatible with all Zustand middleware patterns.
-- **Middleware Order:** Always use zusound as the outermost middleware. This avoids TypeScript errors like:
-  > Argument of type 'StateCreator<...>' is not assignable to parameter of type 'StateCreator<...>'
-- **No `any` Leaks:** zusound does not use `any` in its public API. If you see type errors, check your middleware order.
-- **Custom Middleware:** zusound works with custom and third-party middlewares as long as it is the outermost wrapper.
+## Core Capabilities
 
-## 💡 Concepts
+- `Change detection`: shallow-first with safe stringify fallback
+- `Synthesis`: harmonic `PeriodicWave` timbre generation
+- `Aesthetic controls`: pleasantness, brightness, arousal, valence, simultaneity
+- `Dissonance mapping`: timbre-aware interval ranking with performance fallback
+- `Scheduling`: lookahead audio task scheduler for stable onset timing
 
-- **Intercepting:** Listens to state changes via Zustand middleware
-- **Diffing:** Calculates the difference between previous and next state
-- **Sonifying:** Translates that difference into sound using the Web Audio API
+## Common Options
 
-## 🗺️ Project Status
+```typescript
+const useStore = create(
+  zusound(
+    (set) => ({
+      count: 0,
+      user: null,
+      inc: () => set((state) => ({ count: state.count + 1 })),
+    }),
+    {
+      enabled: true,
+      volume: 0.3,
+      debounceMs: 40,
+      performanceMode: false,
+      aesthetics: {
+        pleasantness: 0.8,
+        brightness: 0.7,
+        arousal: 0.6,
+        valence: 0.6,
+        simultaneity: 1,
+        baseMidi: 69,
+      },
+      mapChangeToAesthetics: (change) => ({
+        pleasantness: change.operation === 'add' ? 0.9 : 0.5,
+      }),
+      onError: (error, context) => {
+        console.debug('zusound non-fatal error', context.stage, error)
+      },
+    }
+  )
+)
+```
 
-- Intercepts state changes with Zustand middleware
-- Performs shallow diffing on state changes
-- Basic sonification (sound generation) based on state changes
+## Production Behavior
 
-## 🤝 Contributing
+- Audio is disabled by default in production environments.
+- If environment detection is ambiguous, audio remains disabled unless explicitly enabled.
+- Browser autoplay policies can keep `AudioContext` suspended until user interaction.
+- `performanceMode` skips heavier dissonance ranking and uses static consonance ordering.
 
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+## Launch Checklist
 
-## 📜 License
+Before tagging a release:
 
-This project is licensed under the [MIT License](LICENSE).
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test:coverage
+pnpm build
+```
 
-## 🙏 Acknowledgements
+Release gate setup (GitHub environment + npm trusted publisher) is documented in `docs/RELEASE_GATES.md`.
 
-zusound is inspired by the excellent [Zustand](https://github.com/pmndrs/zustand).
+## Docs Map
+
+- Quick start: `QUICK_START.md`
+- Development workflow: `DEVELOPMENT.md`
+- Package API and recipes: `packages/zusound/README.md`
+- Contributor workflow: `docs/CONTRIB.md`
+- Operations runbook: `docs/RUNBOOK.md`
+- Release gates: `docs/RELEASE_GATES.md`
+- Security policy: `SECURITY.md`
+- Technical requirements baseline: `REQUIREMENTS.MD`
+
+## Demo
+
+- Hosted demo: `https://joe-byounghern-kim.github.io/zusound/`
+
+Run the demo locally:
+
+```bash
+pnpm build
+node demo/server.js
+```
+
+Then open `http://localhost:3000`.
+
+For detailed demo setup, scenes, and architecture notes, see `demo/README.md`.
+
+TypeScript users can also verify framework integration with the React + Vite strict demo:
+
+```bash
+pnpm demo:react:typecheck
+pnpm demo:react:dev
+```
+
+See `examples/README.md` for details.
+
+Pages deploys are automated through `.github/workflows/deploy-demo.yml` on relevant `main` changes or manual workflow dispatch.
+
+## License
+
+MIT © [joe-byounghern-kim](https://github.com/joe-byounghern-kim)
