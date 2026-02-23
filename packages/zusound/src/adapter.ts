@@ -258,6 +258,7 @@ export function createZusound(baseOptions: ZusoundOptions = {}): ZusoundInstance
       const initializer = arg1
       const options = mergeOptions(baseOptions, arg2 as ZusoundOptions | undefined)
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (...storeArgs: any[]) => {
         const [, get, api] = storeArgs
         const handle = attachZusound(
@@ -272,6 +273,7 @@ export function createZusound(baseOptions: ZusoundOptions = {}): ZusoundInstance
         )
 
         try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           return (initializer as any)(...storeArgs)
         } catch (error) {
           handle.cleanup()
