@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zusound Signal Lab</title>
+    <link rel="stylesheet" href="style.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "zustand/vanilla": "./vendor/zustand/vanilla.mjs",
+          "zusound": "./lib/index.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div class="backdrop"></div>
+    <main class="container">
+      <header class="hero card full-span">
+        <p class="eyebrow">Signal Lab</p>
+        <h1>Hear State Changes Before Logs Catch Up</h1>
+        <p class="subtitle">
+          Zusound turns Zustand updates into instant audio cues. Trigger actions, shape aesthetics,
+          and learn the API through a guided, hands-on flow.
+        </p>
+        <div class="hero-cta-row">
+          <code>npm install zustand zusound</code>
+          <a class="link-button primary" href="#audio-gate">Try the Interactive Demo</a>
+          <a
+            class="link-button ghost"
+            href="https://github.com/joe-byounghern-kim/zusound/blob/main/QUICK_START.md"
+            >Read Quick Start</a
+          >
+        </div>
+      </header>
+
+      <section id="audio-gate" class="card full-span gate-card">
+        <div>
+          <h2>Step 1: Enable Audio</h2>
+          <p class="scene-copy">
+            Browsers block audio until a user gesture. You can explore visuals anytime, and enable
+            sound when ready.
+          </p>
+        </div>
+        <div class="gate-controls">
+          <button id="unlock-audio" class="primary">Enable Audio (Optional)</button>
+          <p id="audio-status" class="status-pill" aria-live="polite">Audio is locked</p>
+        </div>
+      </section>
+
+      <section class="card scene-nav full-span">
+        <button id="prev-scene" class="ghost" disabled>Previous Scene</button>
+        <div>
+          <p id="scene-indicator" class="scene-indicator">Scene 1 of 3 - State Triggers</p>
+          <div
+            class="nav-modes"
+            style="
+              display: flex;
+              gap: 0.5rem;
+              justify-content: center;
+              margin-bottom: 0.5rem;
+              flex-wrap: wrap;
+            "
+          >
+            <p id="event-source-mode" class="mode-pill" aria-live="polite">Mode: detecting...</p>
+            <select
+              id="init-mode-select"
+              class="mode-pill select"
+              style="
+                cursor: pointer;
+                border: 1px solid var(--border-color);
+                background: var(--surface-bg);
+                color: var(--text);
+              "
+            >
+              <option value="middleware">Store Init: Middleware</option>
+              <option value="subscriber">Store Init: Subscriber</option>
+            </select>
+          </div>
+          <p id="scene-hint" class="scene-hint">
+            Run basic state actions and listen for distinct operation cues.
+          </p>
+          <div class="scene-chips" aria-label="Demo scenes">
+            <button class="chip" id="scene-chip-1" data-scene-index="0">1. Triggers</button>
+            <button class="chip" id="scene-chip-2" data-scene-index="1">2. Mapping</button>
+            <button class="chip" id="scene-chip-3" data-scene-index="2">3. Throughput</button>
+          </div>
+        </div>
+        <button id="next-scene" class="primary">Next Scene</button>
+      </section>
+
+      <section class="scene scene-1" data-scene="1">
+        <div class="card">
+          <div class="toggle-wrapper">
+            <h2>Scene 1 - State Triggers</h2>
+            <div class="sound-switch">
+              <span>Sound</span>
+              <label class="switch" title="Enable Zusound">
+                <input type="checkbox" id="sound-toggle" aria-label="Enable sound" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+          <p class="scene-copy">
+            Start here. Adds should trend brighter, removals should feel tenser, and normal updates
+            should stay more neutral.
+          </p>
+          <div class="controls-grid">
+            <button id="btn-inc" class="primary">Increment (+)</button>
+            <button id="btn-dec">Decrement (-)</button>
+            <button id="btn-toggle">Toggle Bool</button>
+            <button id="btn-add-item">Add Item</button>
+            <button id="btn-remove-item" class="danger">Remove Item</button>
+            <button id="btn-string">Update String</button>
+            <button id="btn-reset" class="danger">Reset Store</button>
+          </div>
+        </div>
+        <div class="card card--danger">
+          <h3>Danger Zone</h3>
+          <p class="scene-copy">
+            Hear what an infinite loop sounds like.<br />
+            20 rapid state updates in 500ms.
+          </p>
+          <button id="btn-danger-burst" class="btn--danger">Fire Rapid Burst</button>
+        </div>
+      </section>
+
+      <section class="scene scene-2 is-hidden" data-scene="2">
+        <div class="card">
+          <h2>Scene 2 - Aesthetic Mapping</h2>
+          <p class="scene-copy">
+            Apply presets, then fine-tune parameters to hear how pleasantness, brightness, and
+            simultaneity reshape each dyad.
+          </p>
+          <div class="preset-row">
+            <button id="preset-calm" class="ghost">Calm</button>
+            <button id="preset-balanced" class="ghost">Balanced</button>
+            <button id="preset-tense" class="ghost">Tense</button>
+            <button id="preset-chaotic" class="ghost">Chaotic</button>
+          </div>
+          <div class="sliders">
+            <label class="slider-row">
+              <span>Volume</span>
+              <input id="volume" type="range" min="0" max="1" step="0.01" value="0.5" />
+              <output id="volume-out">0.50</output>
+            </label>
+            <label class="slider-row">
+              <span>Debounce (ms)</span>
+              <input id="debounce" type="range" min="0" max="300" step="10" value="50" />
+              <output id="debounce-out">50</output>
+            </label>
+            <label class="slider-row">
+              <span>Pleasantness</span>
+              <input id="pleasantness" type="range" min="0" max="1" step="0.01" value="0.7" />
+              <output id="pleasantness-out">0.70</output>
+            </label>
+            <label class="slider-row">
+              <span>Brightness</span>
+              <input id="brightness" type="range" min="0" max="1" step="0.01" value="0.6" />
+              <output id="brightness-out">0.60</output>
+            </label>
+            <label class="slider-row">
+              <span>Arousal</span>
+              <input id="arousal" type="range" min="0" max="1" step="0.01" value="0.6" />
+              <output id="arousal-out">0.60</output>
+            </label>
+            <label class="slider-row">
+              <span>Valence</span>
+              <input id="valence" type="range" min="0" max="1" step="0.01" value="0.6" />
+              <output id="valence-out">0.60</output>
+            </label>
+            <label class="slider-row">
+              <span>Simultaneity</span>
+              <input id="simultaneity" type="range" min="0" max="1" step="0.01" value="1" />
+              <output id="simultaneity-out">1.00</output>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section class="scene scene-3 is-hidden" data-scene="3">
+        <div class="card">
+          <h2>Scene 3 - Timing and Throughput</h2>
+          <p class="scene-copy">
+            Stress timing behavior and API-like bursts to evaluate stability under rapid updates.
+          </p>
+          <div class="controls-grid">
+            <button id="btn-stress-test" class="warning">Stress Test (Random)</button>
+            <button id="btn-simulate-api">Simulate API</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card insights-card">
+        <h2>What You Should Hear</h2>
+        <p id="hearing-note" class="hearing-note">
+          Adds and positive transitions should feel more consonant than removals.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Signal Meter</h2>
+        <canvas
+          id="signal-canvas"
+          class="signal-canvas"
+          aria-label="Signal intensity visualization"
+        ></canvas>
+        <p id="signal-caption" class="signal-caption">Waiting for state activity...</p>
+      </section>
+
+      <section class="card">
+        <h2>Live State</h2>
+        <div id="state-display" class="state-display">Loading state...</div>
+      </section>
+
+      <section class="card full-span">
+        <h2>Action Log</h2>
+        <div id="log-container" class="log-container"></div>
+      </section>
+
+      <section class="card full-span docs-bridge">
+        <h2>Next Steps</h2>
+        <div class="docs-links">
+          <a href="https://github.com/joe-byounghern-kim/zusound/blob/main/QUICK_START.md"
+            >Quick Start</a
+          >
+          <a
+            href="https://github.com/joe-byounghern-kim/zusound/blob/main/packages/zusound/README.md"
+            >Package API and Recipes</a
+          >
+          <a href="README.md">Demo Guide</a>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

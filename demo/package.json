@@ -1,0 +1,9 @@
+{
+  "name": "zusound-demo",
+  "type": "module",
+  "scripts": {
+    "stage": "node stage.js",
+    "clean-stage": "node clean-stage.js",
+    "check-stage": "node check-stage.js"
+  }
+}

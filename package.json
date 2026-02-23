@@ -1,90 +1,70 @@
 {
-  "name": "zusound",
-  "version": "0.1.7",
-  "description": "Sound feedback middleware for Zustand state management",
-  "type": "module",
-  "main": "./dist/index.umd.js",
-  "module": "./dist/index.es.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.es.js",
-      "require": "./dist/index.umd.js"
-    }
-  },
-  "files": [
-    "dist",
-    "LICENSE",
-    "README.md"
-  ],
-  "scripts": {
-    "dev": "vite",
-    "build": "rimraf dist && tsup",
-    "build:prod": "NODE_ENV=production bun run build",
-    "lint": "eslint .",
-    "format": "prettier --write .",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "build:examples": "vite build -c vite.examples.config.ts",
-    "deploy:examples": "bun run build:examples && gh-pages -d dist",
-    "prepublishOnly": "bun run build:prod"
-  },
-  "keywords": [
-    "zustand",
-    "sound",
-    "audio",
-    "middleware",
-    "state-management",
-    "sonification"
-  ],
-  "author": "zusound Team",
-  "license": "MIT",
+  "name": "zusound-monorepo",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Zusound - Audio feedback middleware for Zustand",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/behoney/zusound.git"
+    "url": "https://github.com/joe-byounghern-kim/zusound.git"
   },
-  "homepage": "https://behoney.github.io/zusound/",
-  "bugs": {
-    "url": "https://github.com/behoney/zusound/issues"
-  },
-  "dependencies": {
-    "fastest-levenshtein": "^1.0.16",
-    "zustand": ">=5.0.0"
-  },
-  "peerDependencies": {
-    "zustand": ">=5.0.0"
+  "license": "MIT",
+  "author": "joe-byounghern-kim",
+  "type": "module",
+  "workspaces": [
+    "packages/zusound",
+    "examples"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "build:watch": "turbo run build:watch",
+    "changeset": "changeset",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "dev": "turbo run dev",
+    "demo:stage": "pnpm build && pnpm -C demo run stage",
+    "demo:stage:clean": "pnpm -C demo run clean-stage",
+    "demo:verify": "pnpm -C demo run check-stage",
+    "demo:preview": "python3 -m http.server 4173 --directory demo/dist-site",
+    "demo:react:dev": "pnpm -C examples dev",
+    "demo:react:build": "pnpm -C examples build",
+    "demo:react:typecheck": "pnpm -C examples typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml}\"",
+    "lint": "turbo run lint",
+    "prepare": "husky install",
+    "release": "turbo run build && changeset publish",
+    "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "test:watch": "turbo run test:watch",
+    "typecheck": "turbo run typecheck",
+    "version-packages": "changeset version"
   },
   "devDependencies": {
-    "@eslint/js": "^9.21.0",
-    "@microsoft/clarity": "^1.0.0",
-    "@types/node": "^22.14.0",
-    "@types/react": "^18.3.1",
-    "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.4",
-    "@vitest/coverage-v8": "^3.1.1",
-    "ajv": "^8.17.1",
-    "eslint": "^9.21.0",
-    "eslint-config-prettier": "^10.1.1",
-    "eslint-plugin-react-hooks": "^5.1.0",
-    "eslint-plugin-react-refresh": "^0.4.19",
-    "gh-pages": "^6.1.1",
-    "globals": "^15.15.0",
-    "immer": "^10.1.1",
-    "jsdom": "^26.0.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^7.5.0",
-    "react-syntax-highlighter": "^15.6.1",
-    "rimraf": "^6.0.1",
-    "tsc-alias": "^1.8.13",
-    "tsup": "^8.4.0",
-    "typescript": "^5.8.3",
-    "typescript-eslint": "^8.24.1",
-    "vite": "^6.2.0",
-    "vite-plugin-dts": "^4.5.3",
-    "vitest": "^3.1.1"
+    "@changesets/changelog-github": "^0.5.1",
+    "@changesets/cli": "^2.27.1",
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^8.56.0",
+    "@typescript-eslint/parser": "^8.56.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.2.4",
+    "turbo": "^1.11.3",
+    "typescript": "^5.3.3",
+    "zustand": "^4.4.7"
+  },
+  "packageManager": "pnpm@8.14.1",
+  "engines": {
+    "node": ">=18"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml}": [
+      "prettier --write"
+    ]
   }
 }
