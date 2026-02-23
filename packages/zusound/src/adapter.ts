@@ -99,7 +99,7 @@ function mergeOptions(
  * Discriminate between middleware mode `(initializer, options?)` and
  * subscriber mode `(currentState, prevState)` based on argument types.
  */
-function isMiddlewareCall<T>(
+function isMiddlewareCall<T extends object>(
   arg1: unknown,
   arg2: unknown,
   argCount: number
@@ -131,7 +131,7 @@ export function attachZusound<TState>(
     onError,
   } = options
 
-  const cleanup = () => {}
+  const cleanup = () => { }
 
   if (!enabled) {
     adapter.attachCleanup?.(cleanup)
@@ -243,12 +243,12 @@ export function createZusound(baseOptions: ZusoundOptions = {}): ZusoundInstance
     }
   }
 
-  function instance<T>(
+  function instance<T extends object>(
     initializer: StateCreator<T, [], []>,
     options?: ZusoundOptions
   ): StateCreator<T, [], []>
-  function instance<T>(currentState: T, prevState: T): void
-  function instance<T>(
+  function instance<T extends object>(currentState: T, prevState: T): void
+  function instance<T extends object>(
     ...args: [StateCreator<T, [], []>, ZusoundOptions?] | [T, T]
   ): StateCreator<T, [], []> | undefined {
     const arg1 = args[0]
@@ -258,7 +258,8 @@ export function createZusound(baseOptions: ZusoundOptions = {}): ZusoundInstance
       const initializer = arg1
       const options = mergeOptions(baseOptions, arg2 as ZusoundOptions | undefined)
 
-      return (set, get, api) => {
+      return (...storeArgs: any[]) => {
+        const [, get, api] = storeArgs
         const handle = attachZusound(
           {
             getState: get,
@@ -271,7 +272,7 @@ export function createZusound(baseOptions: ZusoundOptions = {}): ZusoundInstance
         )
 
         try {
-          return initializer(set, get, api)
+          return (initializer as any)(...storeArgs)
         } catch (error) {
           handle.cleanup()
           throw error

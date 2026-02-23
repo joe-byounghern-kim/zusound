@@ -1,5 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { createStore } from 'zustand/vanilla'
+import defaultCreateStore, { createStore as namedCreateStore } from 'zustand/vanilla'
+
+// Zustand < 4.3 exported `createStore` as default from 'zustand/vanilla'
+const createStore = namedCreateStore ?? defaultCreateStore
 import * as dissonance from '../src/dissonance'
 import { zusound } from '../src/middleware'
 import { cleanupAudio } from '../src/audio'
@@ -8,7 +11,7 @@ type CounterState = {
   count: number
   inc: () => void
 }
-;(globalThis as any).window ??= globalThis
+  ; (globalThis as any).window ??= globalThis
 
 describe('performanceMode integration', () => {
   beforeEach(() => {

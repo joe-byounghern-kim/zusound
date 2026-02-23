@@ -4,7 +4,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { createStore, type StoreApi } from 'zustand/vanilla'
+import defaultCreateStore, { createStore as namedCreateStore, type StoreApi } from 'zustand/vanilla'
+
+// Zustand < 4.3 exported `createStore` as default from 'zustand/vanilla'
+const createStore = namedCreateStore ?? defaultCreateStore
 import { zusound } from '../src/middleware'
 import { attachZusound, createZusound } from '../src/adapter'
 import { cleanupAudio } from '../src/audio'
@@ -32,7 +35,7 @@ type CounterState = {
   count: number
   increment: () => void
 }
-;(globalThis as any).window ??= globalThis
+  ; (globalThis as any).window ??= globalThis
 
 // Mock Web Audio API
 const mockAudioContext = {
@@ -98,7 +101,7 @@ describe('Zusound Middleware', () => {
     const store = createStore<CounterState>(
       zusound(() => ({
         count: 0,
-        increment: () => {},
+        increment: () => { },
       }))
     )
 
@@ -111,7 +114,7 @@ describe('Zusound Middleware', () => {
       zusound(
         () => ({
           count: 0,
-          increment: () => {},
+          increment: () => { },
         }),
         { enabled: true }
       )
@@ -215,7 +218,7 @@ describe('Zusound Middleware', () => {
     )
 
     store.getState().increment()
-    ;(store as any).zusoundCleanup()
+      ; (store as any).zusoundCleanup()
 
     expect(mockAudioContext.close).toHaveBeenCalledTimes(1)
   })
@@ -282,7 +285,7 @@ describe('Zusound Middleware', () => {
     )
 
     store.getState().increment()
-    ;(store as any).zusoundCleanup()
+      ; (store as any).zusoundCleanup()
 
     await sleep(170)
 
