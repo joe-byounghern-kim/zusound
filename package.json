@@ -1,7 +1,7 @@
 {
   "name": "zusound-monorepo",
   "version": "0.2.0",
-  "private": true,
+  "private": false,
   "description": "Zusound - Audio feedback middleware for Zustand",
   "repository": {
     "type": "git",
