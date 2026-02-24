@@ -50,7 +50,6 @@ demo/dist-site
 .save
 tasks
 .reports
-.changeset
 .claude
 codemaps
 .vscode
