@@ -4,7 +4,7 @@ import { defineConfig } from 'tsup'
 const isProduction = process.env.NODE_ENV === 'production'
 
 export default defineConfig({
-  entry: ['packages/index.ts'],
+  entry: ['packages/zusound/src/index.ts'],
   format: ['esm', 'cjs'], // ESM for import, CJS for require
   dts: true, // Generate declaration files
   splitting: false,
@@ -28,6 +28,4 @@ export default defineConfig({
   shims: true,
   // Set this to handle browser/node environments properly
   platform: 'neutral',
-  // Explicitly specify the tsconfig file for the build
-  tsconfig: 'tsconfig.build.json', // <--- Explicitly use the build tsconfig
 })

@@ -1,0 +1,60 @@
+{
+  "name": "zusound",
+  "version": "0.2.0",
+  "description": "Hear bugs before you see them - audio debugging for Zustand",
+  "keywords": [
+    "zustand",
+    "middleware",
+    "audio",
+    "debugging",
+    "state-management",
+    "sound",
+    "developer-experience"
+  ],
+  "homepage": "https://github.com/joe-byounghern-kim/zusound",
+  "bugs": "https://github.com/joe-byounghern-kim/zusound/issues",
+  "repository": "joe-byounghern-kim/zusound",
+  "license": "MIT",
+  "author": "joe-byounghern-kim",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "clean": "rm -rf dist coverage",
+    "dev": "tsup --watch",
+    "lint": "eslint src",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "zustand": ">=4.0.0 <6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@vitest/coverage-v8": "^1.2.0",
+    "html-encoding-sniffer": "^6.0.0",
+    "jsdom": "^26.1.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0",
+    "zustand": "^5.0.11"
+  }
+}

@@ -1,0 +1,27 @@
+# Source files (we ship built files)
+src/
+__tests__/
+*.test.ts
+*.spec.ts
+
+# Config files
+tsconfig.json
+vitest.config.ts
+tsup.config.ts
+.eslintrc*
+.prettierrc*
+
+# Development files
+*.log
+*.tgz
+.DS_Store
+node_modules/
+coverage/
+.nyc_output/
+
+# Editor
+.vscode/
+.idea/
+
+# Build artifacts that shouldn't be published
+*.map

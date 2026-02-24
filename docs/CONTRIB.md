@@ -1,0 +1,116 @@
+# Contributing Guide
+
+This document is synced from root `package.json` scripts and `.env.example`.
+
+## Environment Setup
+
+Source-of-truth: `.env.example`
+
+Current environment variables:
+
+| Variable | Required | Purpose                                                  | Format                            | Default |
+| -------- | -------- | -------------------------------------------------------- | --------------------------------- | ------- |
+| _none_   | -        | Zusound currently has no required environment variables. | `KEY=value` (if introduced later) | -       |
+
+Notes from `.env.example`:
+
+- Keep `.env.example` as the env source-of-truth.
+- If a variable is introduced later, document it here.
+
+Release operations use repository configuration instead of runtime env vars.
+See `docs/RELEASE_GATES.md` for required GitHub environment and npm trusted publisher setup.
+
+## Development Workflow
+
+1. Install dependencies:
+
+```bash
+pnpm install
+```
+
+2. Run quality gates before opening a PR:
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+3. For React demo checks:
+
+```bash
+pnpm demo:react:typecheck
+pnpm demo:react:build
+```
+
+4. For demo staging and preview:
+
+```bash
+pnpm demo:stage
+pnpm demo:verify
+pnpm demo:preview
+```
+
+## Available Scripts (Root `package.json`)
+
+`package.json` has no script comments, so descriptions below are inferred from script names and commands.
+
+| Script                 | Command                                                  | Description                                    |
+| ---------------------- | -------------------------------------------------------- | ---------------------------------------------- |
+| `build`                | `turbo run build`                                        | Build all workspace packages/apps.             |
+| `build:watch`          | `turbo run build:watch`                                  | Run build watchers across workspaces.          |
+| `changeset`            | `changeset`                                              | Create a release changeset.                    |
+| `clean`                | `turbo run clean && rm -rf node_modules`                 | Clean workspace outputs and root dependencies. |
+| `dev`                  | `turbo run dev`                                          | Run workspace development tasks.               |
+| `demo:stage`           | `pnpm build && pnpm -C demo run stage`                   | Build and stage static demo artifact.          |
+| `demo:stage:clean`     | `pnpm -C demo run clean-stage`                           | Remove staged demo output.                     |
+| `demo:verify`          | `pnpm -C demo run check-stage`                           | Validate staged demo artifact integrity.       |
+| `demo:preview`         | `python3 -m http.server 4173 --directory demo/dist-site` | Preview staged demo artifact locally.          |
+| `demo:react:dev`       | `pnpm -C examples dev`                                   | Run React TypeScript demo in dev mode.         |
+| `demo:react:build`     | `pnpm -C examples build`                                 | Build React TypeScript demo.                   |
+| `demo:react:typecheck` | `pnpm -C examples typecheck`                             | Typecheck React TypeScript demo.               |
+| `format`               | `prettier --write "**/*.{ts,tsx,js,jsx,json,md,yml}"`    | Format repository files.                       |
+| `lint`                 | `turbo run lint`                                         | Run lint tasks across workspaces.              |
+| `prepare`              | `husky install`                                          | Install git hooks.                             |
+| `release`              | `turbo run build && changeset publish`                   | Build and publish packages.                    |
+| `test`                 | `turbo run test`                                         | Run workspace tests.                           |
+| `test:coverage`        | `turbo run test:coverage`                                | Run workspace tests with coverage.             |
+| `test:watch`           | `turbo run test:watch`                                   | Run tests in watch mode.                       |
+| `typecheck`            | `turbo run typecheck`                                    | Run TypeScript checks across workspaces.       |
+| `version-packages`     | `changeset version`                                      | Apply version bumps from changesets.           |
+
+## Testing Procedures
+
+- Full repository preflight:
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+- Coverage run:
+
+```bash
+pnpm test:coverage
+```
+
+- Focused package test loop (from root):
+
+```bash
+pnpm -C packages/zusound test
+pnpm -C packages/zusound test:watch
+```
+
+## Release Workflow
+
+```bash
+pnpm changeset
+pnpm version-packages
+pnpm release
+```
+
+Before release, ensure CI quality gates in `.github/workflows/ci.yml` are green.
+Also verify repository release gates in `docs/RELEASE_GATES.md`.
