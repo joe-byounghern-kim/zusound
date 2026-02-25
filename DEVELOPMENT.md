@@ -78,6 +78,8 @@ Open `http://localhost:5173`.
 Run before creating a release changeset:
 
 ```bash
+pnpm readme:sync
+pnpm readme:check
 pnpm lint
 pnpm typecheck
 pnpm test:coverage

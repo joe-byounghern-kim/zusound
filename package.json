@@ -1,7 +1,7 @@
 {
   "name": "zusound-monorepo",
   "version": "0.2.0",
-  "private": true,
+  "private": false,
   "description": "Zusound - Audio feedback middleware for Zustand",
   "repository": {
     "type": "git",
@@ -30,6 +30,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml}\"",
     "lint": "turbo run lint",
     "prepare": "husky install",
+    "readme:check": "node scripts/sync-readme.mjs --check",
+    "readme:sync": "node scripts/sync-readme.mjs",
     "release": "turbo run build && changeset publish",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
