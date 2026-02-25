@@ -71,6 +71,20 @@
 - [ ] Reviewer confirmed: "Demo API docs synchronized with canonical API docs".
 - [ ] Quick row-by-row spot-check completed for `ZusoundOptions` and `AestheticParams` against canonical sources.
 
+## README Sync Rehearsal (Phase 16)
+
+- [ ] Negative test: intentionally modify one line inside a root managed README sync section.
+- [ ] `pnpm readme:check` fails with remediation message `Run: pnpm readme:sync`.
+- [ ] Run `pnpm readme:sync`; rerun `pnpm readme:check`; check passes.
+- [ ] Positive flow passes full release sequence:
+  - `pnpm changeset status --since=origin/main`
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm test:coverage`
+  - `pnpm build`
+  - `pnpm -C packages/zusound exec npm pack --dry-run`
+- [ ] Capture command outputs (or CI links) in PR description for release sign-off evidence.
+
 ## Phase 15 QA Sign-Off Log
 
 - Date: 2026-02-25

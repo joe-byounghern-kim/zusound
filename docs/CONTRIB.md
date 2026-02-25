@@ -111,9 +111,24 @@ pnpm -C packages/zusound test:watch
 - If a PR changes `ZusoundOptions`, `AestheticParams`, `SoundParams`, `Change`, or primary usage examples, update demo API docs in the same PR.
 - During review, explicitly confirm: "Demo API docs synchronized with canonical API docs".
 
+## README Sync Before Changeset
+
+- Canonical source for package-facing docs is `packages/zusound/README.md`.
+- Shared sections in root `README.md` are managed by markers and must be synchronized before release planning.
+- Run the README gate commands before `pnpm changeset`:
+
+```bash
+pnpm readme:sync
+pnpm readme:check
+```
+
+- If `pnpm readme:check` fails, run `pnpm readme:sync`, stage the README updates, and rerun `pnpm readme:check`.
+
 ## Release Workflow
 
 ```bash
+pnpm readme:sync
+pnpm readme:check
 pnpm changeset
 pnpm version-packages
 pnpm release

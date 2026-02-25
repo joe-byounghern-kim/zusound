@@ -4,6 +4,8 @@ Hear your state changes. Debug faster.
 
 `zusound` is a Zustand middleware that converts state changes into short Web Audio cues so you can hear update patterns while debugging.
 
+<!-- README_SYNC:SECTION_START:install -->
+
 ## Install
 
 ```bash
@@ -11,6 +13,10 @@ npm install zusound
 ```
 
 Supported Zustand versions: `>=4 <6`.
+
+<!-- README_SYNC:SECTION_END:install -->
+
+<!-- README_SYNC:SECTION_START:quick-start -->
 
 ## Quick Usage
 
@@ -26,11 +32,15 @@ const useStore = create(
 )
 ```
 
+<!-- README_SYNC:SECTION_END:quick-start -->
+
 ## API
 
 ### `zusound(initializer, options?)`
 
 The middleware signature matches standard Zustand middleware usage.
+
+<!-- README_SYNC:SECTION_START:create-zusound -->
 
 ### `createZusound(options?)`
 
@@ -53,6 +63,10 @@ unsubscribe()
 zs.cleanup()
 ```
 
+<!-- README_SYNC:SECTION_END:create-zusound -->
+
+<!-- README_SYNC:SECTION_START:zusound-options -->
+
 ### `ZusoundOptions`
 
 | Option                  | Type                                   | Default                                    | Description                                                          |
@@ -66,6 +80,10 @@ zs.cleanup()
 | `performanceMode`       | `boolean`                              | `false`                                    | Uses static consonance ranking to reduce dissonance computation cost |
 | `onError`               | `(error, context) => void`             | `undefined`                                | Optional hook for non-fatal middleware/audio errors                  |
 
+<!-- README_SYNC:SECTION_END:zusound-options -->
+
+<!-- README_SYNC:SECTION_START:aesthetic-parameters -->
+
 ### Aesthetic Parameters
 
 | Param          | Range    | Effect                                                              |
@@ -77,6 +95,10 @@ zs.cleanup()
 | `simultaneity` | `0..1`   | Dyad onset spread (`1` = together, `0` = spread over ~80% duration) |
 | `baseMidi`     | `number` | Base pitch center before interval mapping                           |
 | `duration`     | `number` | Optional note duration override (seconds)                           |
+
+<!-- README_SYNC:SECTION_END:aesthetic-parameters -->
+
+<!-- README_SYNC:SECTION_START:advanced-example -->
 
 ## Advanced Example
 
@@ -115,6 +137,10 @@ const useStore = create(
 )
 ```
 
+<!-- README_SYNC:SECTION_END:advanced-example -->
+
+<!-- README_SYNC:SECTION_START:production-notes -->
+
 ## Production Notes
 
 - Defaults are production-safe: audio is off in production unless `enabled: true` is explicitly set.
@@ -122,6 +148,9 @@ const useStore = create(
 - Browsers may keep `AudioContext` suspended until user interaction.
 - `performanceMode` is recommended for low-power or high-frequency update scenarios.
 - Use `onError` if you need telemetry for non-fatal audio/debugging failures.
+<!-- README_SYNC:SECTION_END:production-notes -->
+
+<!-- README_SYNC:SECTION_START:what-youll-hear -->
 
 ## What You'll Hear
 
@@ -129,6 +158,7 @@ const useStore = create(
 - Booleans: short click-like cues
 - Strings: brighter/longer character
 - Objects/arrays: more layered motion
+<!-- README_SYNC:SECTION_END:what-youll-hear -->
 
 ## Related Docs
 

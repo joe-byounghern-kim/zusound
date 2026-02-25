@@ -35,6 +35,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: README sync check
+        run: pnpm readme:check
+
       - name: Fetch base branch ref
         run: git fetch --no-tags --prune origin +refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
 

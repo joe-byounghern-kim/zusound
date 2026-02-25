@@ -24,7 +24,14 @@ pnpm test:coverage
 pnpm build
 ```
 
-1.5 Validate release gates from `docs/RELEASE_GATES.md` before continuing.
+1.5 Validate README sync guardrails:
+
+```bash
+pnpm readme:sync
+pnpm readme:check
+```
+
+1.6 Validate release gates from `docs/RELEASE_GATES.md` before continuing.
 
 2. Create and apply release versions:
 
@@ -79,6 +86,14 @@ Monitoring signals for operations:
   1. Re-run preflight (`lint`, `typecheck`, `test`, `build`).
   2. Confirm npm credentials/permissions.
   3. Retry `pnpm release`.
+
+### `pnpm readme:check` fails
+
+- Symptom: README drift detected between `packages/zusound/README.md` and managed root README sections.
+- Fix:
+  1. Run `pnpm readme:sync`.
+  2. Re-run `pnpm readme:check`.
+  3. Confirm only expected README sections changed, then continue release flow.
 
 ### Demo staging fails
 

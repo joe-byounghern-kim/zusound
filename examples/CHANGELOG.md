@@ -1,5 +1,12 @@
 # zusound-react-ts-demo
 
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies []:
+  - zusound@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes

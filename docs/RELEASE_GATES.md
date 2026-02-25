@@ -33,6 +33,8 @@ In npm package settings for `zusound`, add a trusted publisher mapping for this 
 Run and verify all gates locally before triggering release:
 
 ```bash
+pnpm readme:sync
+pnpm readme:check
 pnpm lint
 pnpm typecheck
 pnpm test:coverage
@@ -43,10 +45,27 @@ Then confirm CI status:
 
 - `quality` job is green
 - `zustand-compat` matrix is green for oldest `4.x`, latest `4.x`, and latest `5.x`
+- `Release Check` workflow passes `README sync check`
+
+## README Sync Gate (Package -> Root)
+
+- Canonical package-facing README: `packages/zusound/README.md`
+- Root `README.md` includes sync-managed sections with `README_SYNC:SECTION_START/END:<id>` markers.
+- Guardrail command: `pnpm readme:check`.
+- If guardrail fails, remediation is always:
+
+```bash
+pnpm readme:sync
+pnpm readme:check
+```
+
+- Release-related workflows (`release-check.yml`, `release.yml`) run `pnpm readme:check` before changeset/publish steps.
 
 ## Release Procedure
 
 ```bash
+pnpm readme:sync
+pnpm readme:check
 pnpm changeset
 pnpm version-packages
 pnpm release
