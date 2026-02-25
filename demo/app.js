@@ -15,7 +15,7 @@ const els = {
   audioStatus: document.getElementById('audio-status'),
   prevScene: document.getElementById('prev-scene'),
   nextScene: document.getElementById('next-scene'),
-  sceneChips: Array.from(document.querySelectorAll('.chip')),
+  sceneChips: Array.from(document.querySelectorAll('.scene-chips .chip')),
   sceneIndicator: document.getElementById('scene-indicator'),
   eventMode: document.getElementById('event-source-mode'),
   sceneHint: document.getElementById('scene-hint'),
@@ -71,6 +71,11 @@ const scenes = [
     id: 3,
     title: 'Timing and Throughput',
     hint: 'Use stress and API simulation to test rapid update behavior.',
+  },
+  {
+    id: 4,
+    title: 'API Reference',
+    hint: 'Review API usage, options, and recipes without leaving the demo.',
   },
 ]
 
@@ -207,7 +212,19 @@ function formatTime(date) {
 function logAction(action, type = 'update') {
   const entry = document.createElement('div')
   entry.className = 'log-entry'
-  entry.innerHTML = `<span class="timestamp">${formatTime(new Date())}</span><span class="badge ${type}">${type}</span><span>${action}</span>`
+
+  const timestampEl = document.createElement('span')
+  timestampEl.className = 'timestamp'
+  timestampEl.textContent = formatTime(new Date())
+
+  const typeEl = document.createElement('span')
+  typeEl.className = `badge ${type}`
+  typeEl.textContent = type
+
+  const actionEl = document.createElement('span')
+  actionEl.textContent = action
+
+  entry.append(timestampEl, typeEl, actionEl)
   els.log.prepend(entry)
   if (els.hearingNote && hearingNotesByType[type]) {
     els.hearingNote.textContent = hearingNotesByType[type]
@@ -312,7 +329,7 @@ function applyPreset(name) {
   scheduleRebuild(`Applied ${name} preset`)
 }
 
-function showScene(index) {
+function showScene(index, skipHashSync = false) {
   if (index < 0 || index >= scenes.length) return
   currentSceneIndex = index
   const scene = scenes[currentSceneIndex]
@@ -336,9 +353,50 @@ function showScene(index) {
   }
 
   els.sceneChips.forEach((chip, chipIndex) => {
-    const isActive = chipIndex === currentSceneIndex
+    const chipSceneIndexAttr = chip.getAttribute('data-scene-index')
+    const chipSceneIndex = chipSceneIndexAttr === null ? Number.NaN : Number(chipSceneIndexAttr)
+    const isActive = Number.isInteger(chipSceneIndex)
+      ? chipSceneIndex === currentSceneIndex
+      : chipIndex === currentSceneIndex
     chip.classList.toggle('is-active', isActive)
+    if (isActive) {
+      chip.setAttribute('aria-current', 'true')
+    } else {
+      chip.removeAttribute('aria-current')
+    }
   })
+
+  if (!skipHashSync) {
+    const nextHash = scene.id === 4 ? '#api-docs-scene' : ''
+    const nextUrl = `${window.location.pathname}${window.location.search}${nextHash}`
+    window.history.replaceState(null, '', nextUrl)
+  }
+}
+
+function validateSceneTopology() {
+  const sceneSections = Array.from(document.querySelectorAll('.scene[data-scene]'))
+  if (sceneSections.length !== scenes.length || els.sceneChips.length !== scenes.length) {
+    console.warn('Scene topology mismatch', {
+      registeredScenes: scenes.length,
+      sceneSections: sceneSections.length,
+      sceneChips: els.sceneChips.length,
+    })
+  }
+}
+
+function syncSceneFromHash() {
+  const hash = window.location.hash.replace('#', '')
+  if (!hash) return
+
+  if (hash === 'api-docs-scene' || hash === 'api-docs') {
+    showScene(3, true)
+    return
+  }
+
+  const target = document.getElementById(hash)
+  if (target && target.closest('#api-docs-scene')) {
+    showScene(3, true)
+  }
 }
 
 function getTuning() {
@@ -473,13 +531,17 @@ syncOutputs()
 updateAudioStatus(els.toggleSound.checked)
 initSignalCanvas()
 rebuildStore('Initialized')
+validateSceneTopology()
 showScene(0)
+syncSceneFromHash()
+window.addEventListener('hashchange', syncSceneFromHash)
 
 els.prevScene.onclick = () => showScene(currentSceneIndex - 1)
 els.nextScene.onclick = () => showScene(currentSceneIndex + 1)
-els.sceneChips.forEach((chip) => {
+els.sceneChips.forEach((chip, chipIndex) => {
   chip.onclick = () => {
-    const targetIndex = Number(chip.getAttribute('data-scene-index') ?? 0)
+    const targetAttr = chip.getAttribute('data-scene-index')
+    const targetIndex = targetAttr === null ? chipIndex : Number(targetAttr)
     if (Number.isInteger(targetIndex) && targetIndex >= 0 && targetIndex < scenes.length) {
       showScene(targetIndex)
     }

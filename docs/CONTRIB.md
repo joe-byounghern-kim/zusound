@@ -104,6 +104,13 @@ pnpm -C packages/zusound test
 pnpm -C packages/zusound test:watch
 ```
 
+## Demo API Docs Sync Guardrail
+
+- Canonical API ownership is `packages/zusound/src/types.ts` and `packages/zusound/README.md`.
+- Demo API docs (`demo/index.html`, `demo/API_DOCS_STRATEGY.md`) must stay synchronized with canonical names, types, defaults, and usage patterns.
+- If a PR changes `ZusoundOptions`, `AestheticParams`, `SoundParams`, `Change`, or primary usage examples, update demo API docs in the same PR.
+- During review, explicitly confirm: "Demo API docs synchronized with canonical API docs".
+
 ## Release Workflow
 
 ```bash

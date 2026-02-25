@@ -39,6 +39,11 @@ pnpm release
 - CI in `.github/workflows/ci.yml` is green.
 - Published package version is visible on npm.
 
+4. API docs drift audit before release/demo deploy:
+
+- Run `docs/QA_CHECKLIST.md` section "API Docs Drift Audit (Release/PR)".
+- If drift is found, update `demo/index.html` and strategy docs in the same PR before release.
+
 ### Demo deployment (GitHub Pages)
 
 Primary deployment is automated by `.github/workflows/deploy-demo.yml`.
