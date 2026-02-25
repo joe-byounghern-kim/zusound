@@ -76,6 +76,7 @@ zs.cleanup()
 | `valence`      | `0..1`   | Envelope sustain character                                          |
 | `simultaneity` | `0..1`   | Dyad onset spread (`1` = together, `0` = spread over ~80% duration) |
 | `baseMidi`     | `number` | Base pitch center before interval mapping                           |
+| `duration`     | `number` | Optional note duration override (seconds)                           |
 
 ## Advanced Example
 

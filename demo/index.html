@@ -52,7 +52,7 @@
       <section class="card scene-nav full-span">
         <button id="prev-scene" class="ghost" disabled>Previous Scene</button>
         <div>
-          <p id="scene-indicator" class="scene-indicator">Scene 1 of 3 - State Triggers</p>
+          <p id="scene-indicator" class="scene-indicator">Scene 1 of 4 - State Triggers</p>
           <div
             class="nav-modes"
             style="
@@ -64,14 +64,15 @@
             "
           >
             <p id="event-source-mode" class="mode-pill" aria-live="polite">Mode: detecting...</p>
+            <label for="init-mode-select" class="sr-only">Choose store initialization mode</label>
             <select
               id="init-mode-select"
               class="mode-pill select"
               style="
                 cursor: pointer;
-                border: 1px solid var(--border-color);
-                background: var(--surface-bg);
-                color: var(--text);
+                border: 1px solid var(--line);
+                background: var(--surface);
+                color: var(--ink);
               "
             >
               <option value="middleware">Store Init: Middleware</option>
@@ -85,6 +86,7 @@
             <button class="chip" id="scene-chip-1" data-scene-index="0">1. Triggers</button>
             <button class="chip" id="scene-chip-2" data-scene-index="1">2. Mapping</button>
             <button class="chip" id="scene-chip-3" data-scene-index="2">3. Throughput</button>
+            <button class="chip" id="scene-chip-4" data-scene-index="3">4. API Docs</button>
           </div>
         </div>
         <button id="next-scene" class="primary">Next Scene</button>
@@ -188,6 +190,241 @@
           <div class="controls-grid">
             <button id="btn-stress-test" class="warning">Stress Test (Random)</button>
             <button id="btn-simulate-api">Simulate API</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="scene scene-4 is-hidden" data-scene="4" id="api-docs-scene">
+        <div class="card api-docs-shell">
+          <h2 id="api-docs">Scene 4 - API Reference</h2>
+          <p class="scene-copy">
+            Use this in-page API guide while you tune Signal Lab. Types and defaults are aligned to
+            package-level canonical docs.
+          </p>
+
+          <div class="api-docs-grid">
+            <section class="api-block" aria-labelledby="api-usage-patterns">
+              <h3 id="api-usage-patterns">Usage Patterns</h3>
+              <p class="scene-copy">
+                <strong>Middleware</strong> wraps your store creator. <strong>Subscriber</strong>
+                attaches to an existing store and gives explicit lifecycle control.
+              </p>
+              <div class="api-two-col">
+                <div>
+                  <p class="api-label">Middleware</p>
+                  <pre><code>import { create } from 'zustand'
+import { zusound } from 'zusound'
+
+const useStore = create(
+  zusound(
+    (set) => ({
+      count: 0,
+      increment: () => set((s) => ({ count: s.count + 1 })),
+    }),
+    { volume: 0.3, debounceMs: 50 }
+  )
+)</code></pre>
+                </div>
+                <div>
+                  <p class="api-label">Subscriber</p>
+                  <pre><code>import { create } from 'zustand'
+import { createZusound } from 'zusound'
+
+const useStore = create((set) => ({
+  count: 0,
+  increment: () => set((s) => ({ count: s.count + 1 })),
+}))
+
+const instance = createZusound({ volume: 0.3 })
+const unsubscribe = useStore.subscribe(instance)
+
+// cleanup
+unsubscribe()
+instance.cleanup()</code></pre>
+                </div>
+              </div>
+            </section>
+
+            <section class="api-block" aria-labelledby="api-options-ref">
+              <h3 id="api-options-ref">ZusoundOptions</h3>
+              <div class="api-table-wrap">
+                <table class="api-table">
+                  <thead>
+                    <tr>
+                      <th>Option</th>
+                      <th>Type</th>
+                      <th>Default</th>
+                      <th>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>enabled</code></td>
+                      <td><code>boolean</code></td>
+                      <td><code>true</code> in dev, <code>false</code> in prod-like envs</td>
+                      <td>Enable or disable audio feedback.</td>
+                    </tr>
+                    <tr>
+                      <td><code>volume</code></td>
+                      <td><code>number</code></td>
+                      <td><code>0.3</code></td>
+                      <td>Global playback gain from <code>0..1</code>.</td>
+                    </tr>
+                    <tr>
+                      <td><code>debounceMs</code></td>
+                      <td><code>number</code></td>
+                      <td><code>0</code></td>
+                      <td>Coalesce rapid changes before sound emission.</td>
+                    </tr>
+                    <tr>
+                      <td><code>aesthetics</code></td>
+                      <td><code>Partial&lt;AestheticParams&gt;</code></td>
+                      <td>Type-specific defaults</td>
+                      <td>Static per-change tuning overrides.</td>
+                    </tr>
+                    <tr>
+                      <td><code>mapChangeToAesthetics</code></td>
+                      <td><code>(change) =&gt; Partial&lt;AestheticParams&gt;</code></td>
+                      <td><code>undefined</code></td>
+                      <td>Dynamic aesthetics hook for each detected change.</td>
+                    </tr>
+                    <tr>
+                      <td><code>soundMapping</code></td>
+                      <td><code>Record&lt;string, Partial&lt;SoundParams&gt;&gt;</code></td>
+                      <td><code>undefined</code></td>
+                      <td>Path-level frequency, waveform, duration, and volume overrides.</td>
+                    </tr>
+                    <tr>
+                      <td><code>performanceMode</code></td>
+                      <td><code>boolean</code></td>
+                      <td><code>false</code></td>
+                      <td>Use static consonance ranking for lower compute cost.</td>
+                    </tr>
+                    <tr>
+                      <td><code>onError</code></td>
+                      <td><code>(error, context) =&gt; void</code></td>
+                      <td><code>undefined</code></td>
+                      <td>Non-fatal middleware and playback error hook.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="api-block" aria-labelledby="api-aesthetic-ref">
+              <h3 id="api-aesthetic-ref">AestheticParams</h3>
+              <div class="api-table-wrap">
+                <table class="api-table">
+                  <thead>
+                    <tr>
+                      <th>Parameter</th>
+                      <th>Range</th>
+                      <th>Perceptual Effect</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>pleasantness</code></td>
+                      <td><code>0..1</code></td>
+                      <td>Consonance target from tense to stable intervals.</td>
+                    </tr>
+                    <tr>
+                      <td><code>brightness</code></td>
+                      <td><code>0..1</code></td>
+                      <td>Harmonic rolloff from muted to sharp timbre.</td>
+                    </tr>
+                    <tr>
+                      <td><code>arousal</code></td>
+                      <td><code>0..1</code></td>
+                      <td>Envelope speed from slow fades to percussive attacks.</td>
+                    </tr>
+                    <tr>
+                      <td><code>valence</code></td>
+                      <td><code>0..1</code></td>
+                      <td>Sustain character from brief to full sustain.</td>
+                    </tr>
+                    <tr>
+                      <td><code>simultaneity</code></td>
+                      <td><code>0..1</code></td>
+                      <td>Dyad spread: <code>1</code> together, <code>0</code> staggered.</td>
+                    </tr>
+                    <tr>
+                      <td><code>baseMidi</code></td>
+                      <td><code>number</code></td>
+                      <td>Base MIDI pitch center before interval mapping.</td>
+                    </tr>
+                    <tr>
+                      <td><code>duration</code></td>
+                      <td><code>number</code> (seconds)</td>
+                      <td>Override note duration for change-driven synthesis.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="api-block" aria-labelledby="api-change-example">
+              <h3 id="api-change-example">Change Object Example</h3>
+              <pre><code>// incrementing count from 5 to 6
+{
+  path: 'count',
+  operation: 'update',
+  valueType: 'number',
+  oldValue: 5,
+  newValue: 6,
+}</code></pre>
+            </section>
+
+            <section class="api-block" aria-labelledby="api-demo-notes">
+              <h3 id="api-demo-notes">Demo Mode Notes</h3>
+              <p class="api-callout">
+                Local demo mode (<code>node demo/server.js</code>) connects to real SSE events at
+                <code>/events</code>. Hosted/static mode does not open SSE and instead generates a
+                deterministic mock event sequence every 6 seconds.
+              </p>
+            </section>
+
+            <section class="api-block" aria-labelledby="api-recipes">
+              <h3 id="api-recipes">Recipes</h3>
+              <div class="api-two-col">
+                <div>
+                  <p class="api-label">mapChangeToAesthetics</p>
+                  <pre><code>zusound(stateCreator, {
+  mapChangeToAesthetics: (change) => {
+    if (change.operation === 'add') {
+      return { pleasantness: 0.9, valence: 0.8 }
+    }
+    if (change.operation === 'remove') {
+      return { pleasantness: 0.3, arousal: 0.7 }
+    }
+    if (change.path === 'error') {
+      return { pleasantness: 0.1, brightness: 0.9 }
+    }
+    return {}
+  },
+})</code></pre>
+                </div>
+                <div>
+                  <p class="api-label">Per-path soundMapping</p>
+                  <pre><code>zusound(stateCreator, {
+  soundMapping: {
+    count: {
+      frequency: 440,
+      waveform: 'sine',
+      duration: 100,
+      volume: 0.5,
+    },
+    error: {
+      frequency: 220,
+      waveform: 'sawtooth',
+      duration: 300,
+      volume: 0.7,
+    },
+  },
+})</code></pre>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </section>

@@ -255,7 +255,7 @@ button:disabled {
 }
 
 .chip.is-active,
-.chip[aria-selected='true'] {
+.chip[aria-current='true'] {
   border-color: #87f5d0;
   background: rgba(119, 247, 207, 0.18);
 }
@@ -285,6 +285,11 @@ button:disabled {
   opacity: 0;
   width: 0;
   height: 0;
+}
+
+.switch input:focus-visible + .slider {
+  outline: 2px solid #84a9ff;
+  outline-offset: 2px;
 }
 
 .slider {
@@ -455,6 +460,87 @@ input:checked + .slider:before {
   border-color: #8bacff;
 }
 
+.api-docs-shell {
+  gap: 14px;
+}
+
+.api-docs-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.api-block {
+  border: 1px solid #2d355f;
+  border-radius: 12px;
+  background: rgba(9, 12, 24, 0.9);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.api-label {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.api-two-col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.api-table-wrap {
+  overflow-x: auto;
+}
+
+.api-table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+}
+
+.api-table th,
+.api-table td {
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid #2b3358;
+  padding: 9px 8px;
+  font-size: 0.87rem;
+}
+
+.api-table th {
+  color: #cfddff;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.api-block pre {
+  border-radius: 10px;
+  border: 1px solid #2a3153;
+  background: #070a14;
+  color: #c0d5ff;
+  padding: 12px;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.api-block pre code {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.api-callout {
+  border-left: 3px solid var(--accent);
+  padding: 10px 12px;
+  background: rgba(16, 24, 42, 0.85);
+  color: var(--ink-soft);
+}
+
 .scene {
   animation: sceneEnter 220ms ease;
 }
@@ -468,6 +554,18 @@ button:focus-visible,
 .docs-links a:focus-visible {
   outline: 2px solid #84a9ff;
   outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @keyframes sceneEnter {
@@ -525,6 +623,14 @@ button:focus-visible,
 
   .log-entry {
     grid-template-columns: 1fr;
+  }
+
+  .api-two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .api-block {
+    padding: 10px;
   }
 }
 
