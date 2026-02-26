@@ -1,5 +1,11 @@
 # zusound-react-ts-demo
 
+## 0.4.0
+
+### Minor Changes
+
+- [#59](https://github.com/joe-byounghern-kim/zusound/pull/59) [`de6d4ed`](https://github.com/joe-byounghern-kim/zusound/commit/de6d4edcaed74627e201635e0c1147f5dbb461a3) Thanks [@joe-byounghern-kim](https://github.com/joe-byounghern-kim)! - docs update
+
 ## 0.3.1
 
 ### Patch Changes
