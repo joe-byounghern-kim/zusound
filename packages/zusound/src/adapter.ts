@@ -27,10 +27,12 @@ type EmitChangesOptions = Pick<
 /** Deduplicate pending changes by path, keeping only the latest per path. */
 function deduplicateByPath(changes: Change[]): Change[] {
   const latestByPath = new Map<string, Change>()
-  for (const change of changes) {
+  for (let i = changes.length - 1; i >= 0; i--) {
+    const change = changes[i]
+    if (latestByPath.has(change.path)) continue
     latestByPath.set(change.path, change)
   }
-  return [...latestByPath.values()]
+  return [...latestByPath.values()].reverse()
 }
 
 /** Play sounds for a batch of changes, staggering onset times. */
@@ -131,7 +133,7 @@ export function attachZusound<TState>(
     onError,
   } = options
 
-  const cleanup = () => { }
+  const cleanup = () => {}
 
   if (!enabled) {
     adapter.attachCleanup?.(cleanup)

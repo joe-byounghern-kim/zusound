@@ -68,34 +68,38 @@ pnpm readme:check
 
 ## Automated Versioning Policy
 
-Release flow is fully automated on `main` and does not require manual changeset authoring.
+Release publish is tag-driven.
 
-- Version bump source: commit messages since last tag
-- `major`: commit body contains `BREAKING CHANGE` or subject uses `!:`
-- `minor`: commit subject matches `feat(...)` or `feat:`
-- `patch`: everything else
-- Target package: `zusound`
-- Ignored package: `zusound-react-ts-demo` (configured in `.changeset/config.json`)
+- Source of truth for version is `packages/zusound/package.json` on the tagged commit.
+- Release trigger is pushing a semver tag `vX.Y.Z`.
+- The `Release` workflow validates that the pushed tag exactly matches the package version (`v${package.json version}`).
+- The tagged commit must be reachable from `origin/main`.
+- If the version is already on npm, publish is skipped safely.
 
-Manual override is available only when needed via `Release` workflow dispatch input `bump` (`patch`, `minor`, `major`).
+Version bumps happen in normal development/PR flow before tagging. `Release` does not mutate versions.
 
-Manual dispatch defaults to `publish_only=true` to avoid accidental no-change version bumps.
-If you intentionally want to create a new release version from manual dispatch, set `publish_only=false` and provide `bump`.
+Manual publish retry is available via `workflow_dispatch` with a required `tag` input (for example `v0.2.3`).
 
 ## Release Procedure
 
 1. Merge `dev` into `main`.
-2. `Release` workflow runs on that `main` push and will:
+2. Create and push the release tag from the `main` commit you want to publish:
+
+```bash
+git fetch origin
+git checkout main
+git pull --ff-only origin main
+VERSION=$(node -e "console.log(JSON.parse(require('node:fs').readFileSync('packages/zusound/package.json','utf8')).version)")
+git tag "v${VERSION}"
+git push origin "v${VERSION}"
+```
+
+3. `Release` workflow runs on tag push and will:
    - run quality gates
-   - generate an automatic changeset for `zusound`
-   - run `changeset version`
-   - apply freshness guard (skip stale runs)
-   - create/update a `release/vX.Y.Z` branch and open/update a release PR to `main`
-3. Merge the release PR (`chore(release): vX.Y.Z`) into `main`.
-4. `Release` workflow runs again on the merged release commit and will:
-   - ensure tag `vX.Y.Z` exists
-   - publish to npm
-5. Verify npm shows the new version.
+   - verify tag lineage from `main`
+   - verify tag/version match
+   - publish to npm (or skip if already published)
+4. Verify npm shows the new version.
 
 ## Post-Release Validation
 
@@ -113,5 +117,5 @@ If OIDC trusted publishing fails:
 
 1. Ensure repository secret `NPM_TOKEN` is set (granular publish token).
 2. Re-run `Release` using `workflow_dispatch` with:
-   - `publish_only=true`
+   - `tag=vX.Y.Z` (the already-created release tag)
    - `auth_mode=token`
