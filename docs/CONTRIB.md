@@ -111,11 +111,11 @@ pnpm -C packages/zusound test:watch
 - If a PR changes `ZusoundOptions`, `AestheticParams`, `SoundParams`, `Change`, or primary usage examples, update demo API docs in the same PR.
 - During review, explicitly confirm: "Demo API docs synchronized with canonical API docs".
 
-## README Sync Before Changeset
+## README Sync Before Release Merge
 
 - Canonical source for package-facing docs is `packages/zusound/README.md`.
-- Shared sections in root `README.md` are managed by markers and must be synchronized before release planning.
-- Run the README gate commands before `pnpm changeset`:
+- Shared sections in root `README.md` are managed by markers and must be synchronized before merging release-bound work into `main`.
+- Run the README gate commands before opening or merging a release-impacting PR:
 
 ```bash
 pnpm readme:sync
@@ -126,13 +126,22 @@ pnpm readme:check
 
 ## Release Workflow
 
-```bash
-pnpm readme:sync
-pnpm readme:check
-pnpm changeset
-pnpm version-packages
-pnpm release
-```
+1. Keep daily development on `dev` (or feature branches merged into `dev`).
+2. Run preflight checks (`lint`, `typecheck`, `test`, `build`, README sync gate).
+3. Merge `dev` into `main`.
+4. `Release` workflow on `main` performs automated versioning and publish.
+
+Manual fallback (only when automated OIDC publish fails):
+
+1. Open GitHub Actions `Release` workflow (`workflow_dispatch`).
+2. Set `publish_only=true` and `auth_mode=token`.
+3. Ensure repository `NPM_TOKEN` secret is configured.
+
+Manual version creation (rare):
+
+1. Open `Release` via `workflow_dispatch`.
+2. Set `publish_only=false`.
+3. Set `bump` to `patch`, `minor`, or `major`.
 
 Before release, ensure CI quality gates in `.github/workflows/ci.yml` are green.
 Also verify repository release gates in `docs/RELEASE_GATES.md`.

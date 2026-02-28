@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
 
       - name: Install dependencies
@@ -41,8 +41,21 @@ jobs:
       - name: Fetch base branch ref
         run: git fetch --no-tags --prune origin +refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
 
-      - name: Changeset status
-        run: pnpm changeset status --since=origin/${{ github.base_ref }}
+      - name: Auto release bump dry-run
+        env:
+          RELEASE_RANGE: origin/${{ github.base_ref }}..HEAD
+        run: pnpm release:auto:dry-run
+
+      - name: Report demo package changesets
+        run: |
+          shopt -s nullglob
+          files=(.changeset/*.md)
+          if [ ${#files[@]} -eq 0 ]; then
+            exit 0
+          fi
+          if grep -R "zusound-react-ts-demo" "${files[@]}"; then
+            echo "Demo package changesets detected; publish flow ignores this package via .changeset/config.json."
+          fi
 
       - name: Build
         run: pnpm build

@@ -77,7 +77,7 @@
 - [ ] `pnpm readme:check` fails with remediation message `Run: pnpm readme:sync`.
 - [ ] Run `pnpm readme:sync`; rerun `pnpm readme:check`; check passes.
 - [ ] Positive flow passes full release sequence:
-  - `pnpm changeset status --since=origin/main`
+  - `RELEASE_RANGE=origin/main..HEAD pnpm release:auto:dry-run`
   - `pnpm lint`
   - `pnpm typecheck`
   - `pnpm test:coverage`
