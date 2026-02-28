@@ -12,6 +12,10 @@ Zusound uses npm trusted publishing through GitHub Actions OIDC.
 - Default publish auth: OIDC (no token required on normal `main` release runs)
 - Optional fallback auth: repository `NPM_TOKEN` secret, used only via manual `workflow_dispatch` (`auth_mode=token`)
 
+Note for local/manual `changeset version` runs: `@changesets/changelog-github` requires `GITHUB_TOKEN` in environment.
+GitHub Actions already provides built-in `${{ github.token }}`; you cannot create a secret named `GITHUB_TOKEN` because `GITHUB_` prefix is reserved.
+If you need a PAT override, create `CHANGESETS_GITHUB_TOKEN` and the workflow maps it to `GITHUB_TOKEN` automatically.
+
 ## GitHub Environment Setup
 
 Configure the `npm-publish` environment in repository settings.
@@ -81,14 +85,17 @@ If you intentionally want to create a new release version from manual dispatch, 
 ## Release Procedure
 
 1. Merge `dev` into `main`.
-2. `Release` workflow runs automatically and will:
+2. `Release` workflow runs on that `main` push and will:
    - run quality gates
    - generate an automatic changeset for `zusound`
    - run `changeset version`
    - apply freshness guard (skip stale runs)
-   - commit release metadata and push tag `vX.Y.Z`
+   - create/update a `release/vX.Y.Z` branch and open/update a release PR to `main`
+3. Merge the release PR (`chore(release): vX.Y.Z`) into `main`.
+4. `Release` workflow runs again on the merged release commit and will:
+   - ensure tag `vX.Y.Z` exists
    - publish to npm
-3. Verify npm shows the new version.
+5. Verify npm shows the new version.
 
 ## Post-Release Validation
 
