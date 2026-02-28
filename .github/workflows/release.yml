@@ -37,6 +37,8 @@ jobs:
     permissions:
       contents: write
       id-token: write
+      pull-requests: read
+      statuses: read
 
     steps:
       - name: Checkout
@@ -84,6 +86,7 @@ jobs:
         id: prepare_release
         if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.publish_only != 'true' }}
         env:
+          GITHUB_TOKEN: ${{ secrets.CHANGESETS_GITHUB_TOKEN != '' && secrets.CHANGESETS_GITHUB_TOKEN || github.token }}
           RELEASE_BUMP: ${{ github.event.inputs.bump }}
         run: |
           node scripts/create-auto-changeset.mjs
