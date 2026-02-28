@@ -2,13 +2,13 @@ name: Release
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
-      bump:
-        description: Optional version override (patch, minor, major)
-        required: false
+      tag:
+        description: Release tag to publish (example v0.2.3)
+        required: true
         default: ''
       auth_mode:
         description: Publish auth mode (oidc or token)
@@ -18,11 +18,6 @@ on:
           - token
         required: false
         default: oidc
-      publish_only:
-        description: Publish existing unpublished version without creating a new release commit
-        type: boolean
-        required: false
-        default: true
 
 concurrency:
   group: release-${{ github.ref }}
@@ -36,7 +31,6 @@ jobs:
     permissions:
       contents: write
       id-token: write
-      pull-requests: write
       statuses: read
 
     steps:
@@ -73,124 +67,73 @@ jobs:
       - name: Test Coverage
         run: pnpm test:coverage
 
-      - name: Determine release mode
-        id: release_mode
+      - name: Resolve release tag
+        id: release_ctx
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            if [ "${{ github.event.inputs.publish_only }}" = "true" ]; then
-              echo "should_prepare=false" >> "$GITHUB_OUTPUT"
-              echo "should_publish=true" >> "$GITHUB_OUTPUT"
-            else
-              echo "should_prepare=true" >> "$GITHUB_OUTPUT"
-              echo "should_publish=false" >> "$GITHUB_OUTPUT"
-            fi
-            echo "release_commit=false" >> "$GITHUB_OUTPUT"
-            exit 0
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
           fi
 
-          if [[ "${{ github.event.head_commit.message }}" == chore\(release\):* ]]; then
-            echo "release_commit=true" >> "$GITHUB_OUTPUT"
-            echo "should_prepare=false" >> "$GITHUB_OUTPUT"
-            echo "should_publish=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "release_commit=false" >> "$GITHUB_OUTPUT"
-          echo "should_prepare=true" >> "$GITHUB_OUTPUT"
-          echo "should_publish=false" >> "$GITHUB_OUTPUT"
-
-      - name: Validate manual dispatch inputs
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        run: |
-          if [ "${{ github.event.inputs.publish_only }}" != "true" ] && [ -z "${{ github.event.inputs.bump }}" ]; then
-            echo "workflow_dispatch with publish_only=false requires bump (patch|minor|major)."
+          if [ -z "$TAG" ] || [[ "$TAG" != v* ]]; then
+            echo "A valid release tag is required (example: v0.2.3)."
             exit 1
           fi
 
-      - name: Prepare automatic changeset and version
-        id: prepare_release
-        if: ${{ steps.release_mode.outputs.should_prepare == 'true' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.CHANGESETS_GITHUB_TOKEN != '' && secrets.CHANGESETS_GITHUB_TOKEN || github.token }}
-          RELEASE_BUMP: ${{ github.event.inputs.bump }}
-        run: |
-          node scripts/create-auto-changeset.mjs
-          pnpm version-packages
-          VERSION=$(node -e "console.log(JSON.parse(require('node:fs').readFileSync('packages/zusound/package.json', 'utf8')).version)")
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          if git diff --quiet; then
-            echo "release_needed=false" >> "$GITHUB_OUTPUT"
-            exit 0
+          VERSION="${TAG#v}"
+          if [ -z "$VERSION" ] || [ "$VERSION" = "$TAG" ]; then
+            echo "Unable to derive version from tag '$TAG'."
+            exit 1
           fi
-          echo "release_needed=true" >> "$GITHUB_OUTPUT"
 
-      - name: Freshness guard
-        id: freshness
-        if: ${{ (steps.release_mode.outputs.should_prepare == 'true' && steps.prepare_release.outputs.release_needed == 'true') || steps.release_mode.outputs.should_publish == 'true' }}
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            git fetch origin --tags
+            if ! git rev-parse "refs/tags/$TAG" >/dev/null 2>&1; then
+              echo "Tag '$TAG' does not exist on origin."
+              exit 1
+            fi
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout release tag
+        run: git checkout "${{ steps.release_ctx.outputs.tag }}"
+
+      - name: Tag lineage guard
+        id: lineage
         run: |
           git fetch origin main --tags
-          HEAD_SHA=$(git rev-parse HEAD)
-          MAIN_SHA=$(git rev-parse origin/main)
-          if [ "$HEAD_SHA" != "$MAIN_SHA" ]; then
-            echo "stale=true" >> "$GITHUB_OUTPUT"
-            echo "Stale release run detected (HEAD=$HEAD_SHA, origin/main=$MAIN_SHA). Skipping release PR update and publish."
+          TAG_SHA=$(git rev-list -n 1 "${{ steps.release_ctx.outputs.tag }}")
+          if ! git merge-base --is-ancestor "$TAG_SHA" origin/main; then
+            echo "Tag commit ($TAG_SHA) is not reachable from origin/main."
+            exit 1
+          fi
+
+      - name: Verify tag matches package version
+        id: package_version
+        run: |
+          PACKAGE_VERSION=$(node -e "console.log(JSON.parse(require('node:fs').readFileSync('packages/zusound/package.json', 'utf8')).version)")
+          if [ "v${PACKAGE_VERSION}" != "${{ steps.release_ctx.outputs.tag }}" ]; then
+            echo "Tag '${{ steps.release_ctx.outputs.tag }}' does not match package version 'v${PACKAGE_VERSION}'."
+            exit 1
+          fi
+          echo "package_version=$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Skip if version already published
+        id: published_guard
+        run: |
+          PUBLISHED_VERSION=$(npm view zusound version 2>/dev/null || true)
+          if [ "$PUBLISHED_VERSION" = "${{ steps.package_version.outputs.package_version }}" ]; then
+            echo "Version $PUBLISHED_VERSION is already published. Skipping publish."
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          echo "stale=false" >> "$GITHUB_OUTPUT"
-
-      - name: Create or update release PR
-        if: ${{ steps.release_mode.outputs.should_prepare == 'true' && steps.prepare_release.outputs.release_needed == 'true' && steps.freshness.outputs.stale != 'true' }}
-        env:
-          GH_TOKEN: ${{ secrets.CHANGESETS_GITHUB_TOKEN != '' && secrets.CHANGESETS_GITHUB_TOKEN || github.token }}
-        run: |
-          VERSION="${{ steps.prepare_release.outputs.version }}"
-          BRANCH="release/v${VERSION}"
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -B "$BRANCH"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No release changes to commit."
-            exit 0
-          fi
-          git commit -m "chore(release): v${VERSION}"
-          git push --force-with-lease origin "$BRANCH"
-
-          PR_URL=$(gh pr list --base main --head "$BRANCH" --state open --json url --jq '.[0].url')
-          PR_TITLE="chore(release): v${VERSION}"
-          PR_BODY="## Summary\n- Release zusound v${VERSION}\n- Generated by automated release workflow from latest main\n\n## Notes\n- This PR exists because main is branch-protected and does not allow direct pushes."
-
-          if [ -n "$PR_URL" ]; then
-            gh pr edit "$PR_URL" --title "$PR_TITLE" --body "$PR_BODY"
-            echo "Updated existing release PR: $PR_URL"
-          else
-            gh pr create --base main --head "$BRANCH" --title "$PR_TITLE" --body "$PR_BODY"
-          fi
-
-      - name: Resolve publish version
-        id: publish_context
-        if: ${{ steps.release_mode.outputs.should_publish == 'true' && steps.freshness.outputs.stale != 'true' }}
-        run: |
-          VERSION=$(node -e "console.log(JSON.parse(require('node:fs').readFileSync('packages/zusound/package.json', 'utf8')).version)")
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Ensure release tag exists
-        if: ${{ steps.release_mode.outputs.should_publish == 'true' && steps.freshness.outputs.stale != 'true' }}
-        run: |
-          VERSION="${{ steps.publish_context.outputs.version }}"
-          TAG="v${VERSION}"
-          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null; then
-            echo "Tag ${TAG} already exists on origin."
-          else
-            if ! git rev-parse "$TAG" >/dev/null 2>&1; then
-              git tag "$TAG"
-            fi
-            git push origin "$TAG"
-          fi
+          echo "should_publish=true" >> "$GITHUB_OUTPUT"
 
       - name: Validate token fallback secret
-        if: ${{ steps.release_mode.outputs.should_publish == 'true' && steps.freshness.outputs.stale != 'true' && github.event.inputs.auth_mode == 'token' }}
+        if: ${{ steps.published_guard.outputs.should_publish == 'true' && github.event.inputs.auth_mode == 'token' }}
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -200,13 +143,13 @@ jobs:
           fi
 
       - name: Publish package (OIDC)
-        if: ${{ steps.release_mode.outputs.should_publish == 'true' && steps.freshness.outputs.stale != 'true' && github.event.inputs.auth_mode != 'token' }}
+        if: ${{ steps.published_guard.outputs.should_publish == 'true' && github.event.inputs.auth_mode != 'token' }}
         run: pnpm release
         env:
           NPM_CONFIG_PROVENANCE: true
 
       - name: Publish package (token fallback)
-        if: ${{ steps.release_mode.outputs.should_publish == 'true' && steps.freshness.outputs.stale != 'true' && github.event.inputs.auth_mode == 'token' }}
+        if: ${{ steps.published_guard.outputs.should_publish == 'true' && github.event.inputs.auth_mode == 'token' }}
         run: pnpm release
         env:
           NPM_CONFIG_PROVENANCE: true

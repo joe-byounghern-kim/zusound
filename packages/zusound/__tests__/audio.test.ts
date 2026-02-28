@@ -396,6 +396,82 @@ describe('audio playback', () => {
     expect(peakCall[0]).toBeCloseTo(0.3, 6)
   })
 
+  it('clamps soundMapping volume to the 0..1 range', async () => {
+    const high = setupMockAudioContext()
+    await playSound(
+      {
+        path: 'count',
+        operation: 'update',
+        valueType: 'number',
+        newValue: 2,
+        oldValue: 1,
+      },
+      {
+        globalVolume: 0.6,
+        soundMapping: {
+          count: {
+            volume: 2,
+          },
+        },
+      }
+    )
+
+    const highEnvelope = high.gains[0]
+    const highPeakCall = highEnvelope.gain.linearRampToValueAtTime.mock.calls[0]
+    expect(highPeakCall[0]).toBeCloseTo(0.6, 6)
+
+    cleanupAudio()
+
+    const low = setupMockAudioContext()
+    await playSound(
+      {
+        path: 'count',
+        operation: 'update',
+        valueType: 'number',
+        newValue: 2,
+        oldValue: 1,
+      },
+      {
+        globalVolume: 0.6,
+        soundMapping: {
+          count: {
+            volume: -1,
+          },
+        },
+      }
+    )
+
+    const lowEnvelope = low.gains[0]
+    const lowPeakCall = lowEnvelope.gain.linearRampToValueAtTime.mock.calls[0]
+    expect(lowPeakCall[0]).toBeCloseTo(0, 6)
+  })
+
+  it('ignores non-finite soundMapping volume and falls back to global volume', async () => {
+    const { gains } = setupMockAudioContext()
+
+    await playSound(
+      {
+        path: 'count',
+        operation: 'update',
+        valueType: 'number',
+        newValue: 2,
+        oldValue: 1,
+      },
+      {
+        globalVolume: 0.4,
+        soundMapping: {
+          count: {
+            volume: Number.NaN,
+          },
+        },
+      }
+    )
+
+    const envelopeGain = gains[0]
+    const peakCall = envelopeGain.gain.linearRampToValueAtTime.mock.calls[0]
+    expect(peakCall[0]).toBeCloseTo(0.4, 6)
+  })
+
   it('produces stable baseMidi offset from change.path', async () => {
     const run1 = setupMockAudioContext()
     await playSound({

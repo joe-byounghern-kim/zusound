@@ -35,13 +35,20 @@ pnpm readme:check
 
 2. Merge `dev` into `main`.
 
-3. Verify the first `Release` run opened/updated a release PR (`release/vX.Y.Z` -> `main`).
+3. Create and push release tag from latest `main` commit:
 
-4. Merge the release PR (`chore(release): vX.Y.Z`) into `main`.
+```bash
+git fetch origin
+git checkout main
+git pull --ff-only origin main
+VERSION=$(node -e "console.log(JSON.parse(require('node:fs').readFileSync('packages/zusound/package.json','utf8')).version)")
+git tag "v${VERSION}"
+git push origin "v${VERSION}"
+```
 
-5. Verify release outcomes:
+4. Verify release outcomes:
 
-- `Release` workflow in `.github/workflows/release.yml` is green for the release-commit run.
+- `Release` workflow in `.github/workflows/release.yml` is green for the tag run.
 - Published package version is visible on npm.
 
 4. API docs drift audit before release/demo deploy:
@@ -81,11 +88,10 @@ Monitoring signals for operations:
 
 - Symptom: automated publish/auth/version step fails in GitHub Actions.
 - Fix:
-  1. Re-run preflight (`lint`, `typecheck`, `test`, `build`) on the release commit.
-  2. Confirm stale-run guard output; if workflow marked stale, re-run on latest `main` commit.
+  1. Re-run preflight (`lint`, `typecheck`, `test`, `build`) on the tagged commit.
+  2. Confirm release tag points to a commit reachable from `main`.
   3. Confirm npm trusted publisher mapping (`repo`, workflow path, branch, environment) matches `docs/RELEASE_GATES.md`.
-  4. If OIDC still fails, re-run `Release` with `workflow_dispatch` using `publish_only=true` and `auth_mode=token`.
-  5. If running manual version creation, use `publish_only=false` and set `bump` (`patch`, `minor`, `major`).
+  4. If OIDC still fails, re-run `Release` with `workflow_dispatch` using `tag=vX.Y.Z` and `auth_mode=token`.
 
 ### `pnpm readme:check` fails
 

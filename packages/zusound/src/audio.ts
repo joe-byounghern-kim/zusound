@@ -134,10 +134,7 @@ function defaultAesthetics(change: Change): AestheticParams {
 
   // FNV-1a hash of the path string for a stable ±3 semitone pitch offset.
   // This gives each state key a recognizable pitch identity.
-  const h = [...change.path].reduce(
-    (a, c) => ((a ^ c.charCodeAt(0)) * 16777619) >>> 0,
-    2166136261
-  )
+  const h = [...change.path].reduce((a, c) => ((a ^ c.charCodeAt(0)) * 16777619) >>> 0, 2166136261)
   baseMidi += (h % 7) - 3
 
   // Value-aware modulation: delta-driven pitch, arousal, and duration
@@ -257,7 +254,10 @@ function applySoundMapping(
 
   const durationOverride =
     typeof mapping.duration === 'number' ? mapping.duration / 1000 : undefined
-  const volumeMultiplier = typeof mapping.volume === 'number' ? mapping.volume : undefined
+  const volumeMultiplier =
+    typeof mapping.volume === 'number' && Number.isFinite(mapping.volume)
+      ? clamp01(mapping.volume)
+      : undefined
 
   return {
     aesthetics: next,
@@ -355,7 +355,8 @@ export async function playSound(
   })
 
   const durationSeconds = Math.max(0.02, mapped.durationOverride ?? merged.duration ?? 0.15)
-  const offsetSeconds = typeof volumeOrOptions === 'number' ? 0 : (volumeOrOptions?.startOffset ?? 0)
+  const offsetSeconds =
+    typeof volumeOrOptions === 'number' ? 0 : (volumeOrOptions?.startOffset ?? 0)
   const startTime = ctx.currentTime + 0.01 + offsetSeconds
   const spreadSeconds = (1 - mapped.aesthetics.simultaneity) * durationSeconds * 0.8
 

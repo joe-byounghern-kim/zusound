@@ -60,10 +60,8 @@ export function Demo() {
       enabled: true,
       aesthetics: committed.aesthetics,
       mapChangeToAesthetics: (change) => {
-        if (change.operation === 'add')
-          return { pleasantness: 0.88, valence: 0.82 }
-        if (change.operation === 'remove')
-          return { pleasantness: 0.34, arousal: 0.72 }
+        if (change.operation === 'add') return { pleasantness: 0.88, valence: 0.82 }
+        if (change.operation === 'remove') return { pleasantness: 0.34, arousal: 0.72 }
         return { pleasantness: 0.64 }
       },
     })
@@ -118,7 +116,8 @@ export function Demo() {
     burstRef.current = window.setInterval(() => {
       useSubscriberStore.getState().increment()
       if (++i >= 20) {
-        clearInterval(burstRef.current!)
+        const timerId = burstRef.current
+        if (timerId !== null) clearInterval(timerId)
         burstRef.current = null
       }
     }, 25)
@@ -152,7 +151,11 @@ export function Demo() {
               Each data type produces a distinct tone.
             </p>
             <div className="controls-grid">
-              <button type="button" className="btn--primary" onClick={() => storeActions.increment()}>
+              <button
+                type="button"
+                className="btn--primary"
+                onClick={() => storeActions.increment()}
+              >
                 Increment (+)
               </button>
               <button type="button" onClick={() => storeActions.decrement()}>
@@ -164,7 +167,11 @@ export function Demo() {
               <button type="button" onClick={() => storeActions.addItem()}>
                 Add Item
               </button>
-              <button type="button" className="btn--danger" onClick={() => storeActions.removeItem()}>
+              <button
+                type="button"
+                className="btn--danger"
+                onClick={() => storeActions.removeItem()}
+              >
                 Remove Item
               </button>
               <button type="button" onClick={() => storeActions.cycleStatus()}>
@@ -193,28 +200,25 @@ export function Demo() {
             </button>
           </div>
 
-          {/* Usage Mode */}
           <div className="card">
-            <h3>Usage Patterns</h3>
-            <div className="mode-tabs" role="group" aria-label="Usage pattern selection">
+            <h3>Usage Snippets</h3>
+            <div className="mode-tabs">
               <button
                 type="button"
                 aria-pressed={mode === 'middleware'}
                 onClick={() => setMode('middleware')}
               >
-                Middleware
+                Middleware Snippet
               </button>
               <button
                 type="button"
                 aria-pressed={mode === 'subscriber'}
                 onClick={() => setMode('subscriber')}
               >
-                Subscriber
+                Subscriber Snippet
               </button>
             </div>
-            <CodeBlock
-              code={mode === 'middleware' ? MIDDLEWARE_SNIPPET : SUBSCRIBER_SNIPPET}
-            />
+            <CodeBlock code={mode === 'middleware' ? MIDDLEWARE_SNIPPET : SUBSCRIBER_SNIPPET} />
             <p style={{ color: 'var(--ink-soft)', fontSize: '0.78rem' }}>
               This playground uses the subscriber pattern so aesthetic sliders update live.
             </p>

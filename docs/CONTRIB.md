@@ -129,21 +129,16 @@ pnpm readme:check
 1. Keep daily development on `dev` (or feature branches merged into `dev`).
 2. Run preflight checks (`lint`, `typecheck`, `test`, `build`, README sync gate).
 3. Merge `dev` into `main`.
-4. First `Release` run on `main` performs automated versioning and opens/updates a release PR (`release/vX.Y.Z` -> `main`).
-5. Merge the release PR (`chore(release): vX.Y.Z`) into `main`.
-6. Second `Release` run on the release commit tags and publishes to npm.
+4. Tag the release from the `main` commit using `v${packageVersion}` and push the tag.
+5. `Release` workflow runs on the tag and publishes to npm.
 
 Manual fallback (only when automated OIDC publish fails):
 
 1. Open GitHub Actions `Release` workflow (`workflow_dispatch`).
-2. Set `publish_only=true` and `auth_mode=token`.
+2. Set `tag=vX.Y.Z` and `auth_mode=token`.
 3. Ensure repository `NPM_TOKEN` secret is configured.
 
-Manual version creation (rare):
-
-1. Open `Release` via `workflow_dispatch`.
-2. Set `publish_only=false`.
-3. Set `bump` to `patch`, `minor`, or `major`.
+Version bumps are done in normal PR flow before tagging. `Release` workflow does not create new versions.
 
 Before release, ensure CI quality gates in `.github/workflows/ci.yml` are green.
 Also verify repository release gates in `docs/RELEASE_GATES.md`.
