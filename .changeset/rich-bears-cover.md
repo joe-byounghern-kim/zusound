@@ -1,0 +1,5 @@
+---
+'zusound': patch
+---
+
+update docs

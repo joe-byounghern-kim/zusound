@@ -15,7 +15,7 @@ Release publishing prerequisites are configured in GitHub/npm settings and docum
 
 ### Package release (npm)
 
-1. Run preflight quality gates:
+1. Run preflight quality gates before merging into `main`:
 
 ```bash
 pnpm lint
@@ -33,17 +33,11 @@ pnpm readme:check
 
 1.6 Validate release gates from `docs/RELEASE_GATES.md` before continuing.
 
-2. Create and apply release versions:
-
-```bash
-pnpm changeset
-pnpm version-packages
-pnpm release
-```
+2. Merge `dev` into `main` (release is automated on `main` pushes).
 
 3. Verify release outcomes:
 
-- CI in `.github/workflows/ci.yml` is green.
+- `Release` workflow in `.github/workflows/release.yml` is green.
 - Published package version is visible on npm.
 
 4. API docs drift audit before release/demo deploy:
@@ -74,18 +68,20 @@ Monitoring signals for operations:
 
 - CI failures in `.github/workflows/ci.yml`.
 - Demo deploy failures in `.github/workflows/deploy-demo.yml`.
-- `pnpm release` publish/auth failures.
+- `Release` workflow publish/auth failures.
 - `pnpm demo:verify` stage validation failures.
 
 ## Common Issues and Fixes
 
-### `pnpm release` fails
+### `Release` workflow fails
 
-- Symptom: publish/auth/version command fails.
+- Symptom: automated publish/auth/version step fails in GitHub Actions.
 - Fix:
-  1. Re-run preflight (`lint`, `typecheck`, `test`, `build`).
-  2. Confirm npm credentials/permissions.
-  3. Retry `pnpm release`.
+  1. Re-run preflight (`lint`, `typecheck`, `test`, `build`) on the release commit.
+  2. Confirm stale-run guard output; if workflow marked stale, re-run on latest `main` commit.
+  3. Confirm npm trusted publisher mapping (`repo`, workflow path, branch, environment) matches `docs/RELEASE_GATES.md`.
+  4. If OIDC still fails, re-run `Release` with `workflow_dispatch` using `publish_only=true` and `auth_mode=token`.
+  5. If running manual version creation, use `publish_only=false` and set `bump` (`patch`, `minor`, `major`).
 
 ### `pnpm readme:check` fails
 
@@ -119,9 +115,11 @@ Monitoring signals for operations:
 Preferred rollback strategy is a fast corrective patch release.
 
 ```bash
-pnpm changeset
-pnpm version-packages
-pnpm release
+git checkout dev
+# apply fix
+git commit -m "fix: <rollback fix>"
+git push origin dev
+# merge dev -> main to trigger automated release
 ```
 
 If a bad version must be discouraged immediately:
