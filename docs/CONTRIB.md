@@ -129,7 +129,9 @@ pnpm readme:check
 1. Keep daily development on `dev` (or feature branches merged into `dev`).
 2. Run preflight checks (`lint`, `typecheck`, `test`, `build`, README sync gate).
 3. Merge `dev` into `main`.
-4. `Release` workflow on `main` performs automated versioning and publish.
+4. First `Release` run on `main` performs automated versioning and opens/updates a release PR (`release/vX.Y.Z` -> `main`).
+5. Merge the release PR (`chore(release): vX.Y.Z`) into `main`.
+6. Second `Release` run on the release commit tags and publishes to npm.
 
 Manual fallback (only when automated OIDC publish fails):
 

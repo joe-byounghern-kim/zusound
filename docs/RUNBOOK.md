@@ -33,11 +33,15 @@ pnpm readme:check
 
 1.6 Validate release gates from `docs/RELEASE_GATES.md` before continuing.
 
-2. Merge `dev` into `main` (release is automated on `main` pushes).
+2. Merge `dev` into `main`.
 
-3. Verify release outcomes:
+3. Verify the first `Release` run opened/updated a release PR (`release/vX.Y.Z` -> `main`).
 
-- `Release` workflow in `.github/workflows/release.yml` is green.
+4. Merge the release PR (`chore(release): vX.Y.Z`) into `main`.
+
+5. Verify release outcomes:
+
+- `Release` workflow in `.github/workflows/release.yml` is green for the release-commit run.
 - Published package version is visible on npm.
 
 4. API docs drift audit before release/demo deploy:
