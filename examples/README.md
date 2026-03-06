@@ -39,7 +39,7 @@ export const useStore = create<StoreType>()(zusound((set) => ({ ... })))
 
 This mirrors current guidance for strict TypeScript middleware integration.
 
-**2. Direct Subscriber (New)**
+**2. Explicit Subscriber Attachment**
 
 ```ts
 export const useStore = create<StoreType>()((set) => ({ ... }))
@@ -49,4 +49,5 @@ const zs = createZusound({...options})
 const unsubscribe = useStore.subscribe(zs)
 ```
 
-This is a lighter-touch approach for adding/removing audio dynamically without wrapping the entire store definition.
+This is a lighter-touch approach for adding/removing audio dynamically without wrapping the
+entire store definition. Use a fresh `createZusound(...)` instance for each attachment.

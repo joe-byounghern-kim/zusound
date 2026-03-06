@@ -71,6 +71,25 @@ pnpm demo:preview
 
 If preview/verification is good, trigger `Deploy Demo to GitHub Pages` with `workflow_dispatch`.
 
+### Skill system rollout (Phase 16)
+
+Use this flow when adding or updating reusable agent skills:
+
+```bash
+pnpm skills:validate
+pnpm skills:bridge
+pnpm lint
+pnpm typecheck
+pnpm test:coverage
+pnpm build
+```
+
+Rules:
+
+- Treat `.agents/skills/` as the only source of truth.
+- Do not treat `.claude/skills/` output as canonical content.
+- If `skills:validate` fails, fix structure/frontmatter/references before running broader gates.
+
 ## Monitoring and Alerts
 
 This repository has no runtime alerting service.
@@ -100,6 +119,16 @@ Monitoring signals for operations:
   1. Run `pnpm readme:sync`.
   2. Re-run `pnpm readme:check`.
   3. Confirm only expected README sections changed, then continue release flow.
+
+### `pnpm skills:check` fails
+
+- Symptom: skill validation exits non-zero for missing frontmatter, naming mismatch, missing references, or broken local links.
+- Fix:
+  1. Ensure each skill has `SKILL.md` and `references/*.md`.
+  2. Ensure frontmatter includes `name` and `description`.
+  3. Ensure `name` is kebab-case and matches directory name (except `_template`).
+  4. Fix any broken markdown links in `SKILL.md`.
+  5. Re-run `pnpm skills:check` and then `pnpm skills:bridge`.
 
 ### Demo staging fails
 

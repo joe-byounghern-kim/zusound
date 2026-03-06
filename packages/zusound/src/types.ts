@@ -123,6 +123,9 @@ export type ZusoundSubscriber<TState> = (currentState: TState, prevState: TState
  * Can be used as:
  * - **Middleware**: `create(instance(initializer, options))`
  * - **Subscriber**: `store.subscribe(instance)`
+ *
+ * Create a fresh instance for each `store.subscribe(...)` attachment and call
+ * both `unsubscribe()` and `instance.cleanup()` when the attachment is removed.
  */
 export interface ZusoundInstance {
   /** Middleware mode: wraps a Zustand state creator. */

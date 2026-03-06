@@ -124,6 +124,40 @@ pnpm readme:check
 
 - If `pnpm readme:check` fails, run `pnpm readme:sync`, stage the README updates, and rerun `pnpm readme:check`.
 
+## Agent Skills Workflow (Phase 16)
+
+- Canonical skill artifacts live in `.agents/skills/`.
+- Each skill directory must include `SKILL.md` plus `references/*.md`.
+- Required `SKILL.md` frontmatter keys: `name`, `description`.
+- `.claude/skills/` is local generated bridge output (non-canonical).
+
+Plan quality rubric for Prometheus onboarding tasks:
+
+- Include objective/constraints and at least two approaches.
+- Record selected approach with rationale and risk tradeoffs.
+- Break work into dependency-aware atomic tasks.
+- Define verification gates with concrete commands and expected outcomes.
+
+Run skill checks before PR merge:
+
+```bash
+pnpm skills:validate
+pnpm skills:bridge
+```
+
+Phase 17 user-facing skill pack (canonical IDs):
+
+- `zusound-onboarding`
+- `zusound-tuning`
+- `zusound-debugging`
+- `zusound-migration`
+
+Contributor expectation for user-facing skill changes:
+
+1. Update canonical artifacts under `.agents/skills/<skill-id>/`.
+2. Regenerate local bridge files with `pnpm skills:bridge`.
+3. Verify docs reference the same primary path (`.agents/skills/` -> `.claude/skills/`).
+
 ## Release Workflow
 
 1. Keep daily development on `dev` (or feature branches merged into `dev`).

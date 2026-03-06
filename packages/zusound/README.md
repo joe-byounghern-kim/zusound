@@ -63,6 +63,9 @@ unsubscribe()
 zs.cleanup()
 ```
 
+Use a fresh `createZusound(...)` instance for each `store.subscribe(...)` attachment. The
+top-level `zusound` export is intended for middleware wrapping.
+
 <!-- README_SYNC:SECTION_END:create-zusound -->
 
 <!-- README_SYNC:SECTION_START:zusound-options -->

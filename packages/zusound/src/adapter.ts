@@ -22,7 +22,9 @@ import type { StateCreator } from 'zustand/vanilla'
 type EmitChangesOptions = Pick<
   ZusoundOptions,
   'volume' | 'soundMapping' | 'aesthetics' | 'mapChangeToAesthetics' | 'performanceMode' | 'onError'
->
+> & {
+  isPlaybackActive?: () => boolean
+}
 
 /** Deduplicate pending changes by path, keeping only the latest per path. */
 function deduplicateByPath(changes: Change[]): Change[] {
@@ -46,6 +48,7 @@ function emitChanges(changes: Change[], options: EmitChangesOptions): void {
     mapChangeToAesthetics,
     performanceMode,
     onError,
+    isPlaybackActive,
   } = options
 
   for (let i = 0; i < changes.length; i++) {
@@ -58,6 +61,7 @@ function emitChanges(changes: Change[], options: EmitChangesOptions): void {
       performanceMode,
       onError,
       startOffset: Math.min(i * STAGGER_SECONDS, MAX_STAGGER_SECONDS),
+      isPlaybackActive,
     }).catch((error) => {
       onError?.(error, { stage: 'playback', change })
       console.debug('Zusound: Audio playback failed', error)
@@ -159,6 +163,7 @@ export function attachZusound<TState>(
 
           if (debounceTimer) clearTimeout(debounceTimer)
           debounceTimer = setTimeout(() => {
+            if (cleanedUp) return
             const flushed = deduplicateByPath(pendingChanges)
             pendingChanges = []
             debounceTimer = null
@@ -169,6 +174,7 @@ export function attachZusound<TState>(
               mapChangeToAesthetics,
               performanceMode,
               onError,
+              isPlaybackActive: () => !cleanedUp,
             })
           }, debounceMs)
         } else {
@@ -179,6 +185,7 @@ export function attachZusound<TState>(
             mapChangeToAesthetics,
             performanceMode,
             onError,
+            isPlaybackActive: () => !cleanedUp,
           })
         }
       } catch (error) {
@@ -303,13 +310,20 @@ export function createZusound(baseOptions: ZusoundOptions = {}): ZusoundInstance
 
         if (debounceTimer) clearTimeout(debounceTimer)
         debounceTimer = setTimeout(() => {
+          if (cleanedUp) return
           const flushed = deduplicateByPath(pendingChanges)
           pendingChanges = []
           debounceTimer = null
-          emitChanges(flushed, options)
+          emitChanges(flushed, {
+            ...options,
+            isPlaybackActive: () => !cleanedUp,
+          })
         }, options.debounceMs)
       } else {
-        emitChanges(changes, options)
+        emitChanges(changes, {
+          ...options,
+          isPlaybackActive: () => !cleanedUp,
+        })
       }
     } catch (error) {
       options.onError?.(error, { stage: 'state-change-processing' })

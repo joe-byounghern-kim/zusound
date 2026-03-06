@@ -293,6 +293,35 @@ describe('Zusound Middleware', () => {
     expect(() => (store as any).zusoundCleanup()).not.toThrow()
   })
 
+  it('suppresses queued playback after cleanup while another store keeps the audio engine alive', async () => {
+    type CounterStoreWithCleanup = StoreApi<CounterState> & {
+      zusoundCleanup: () => void
+    }
+
+    const createCounterStore = (): CounterStoreWithCleanup =>
+      createStore<CounterState>(
+        zusound(
+          (set) => ({
+            count: 0,
+            increment: () => set((state) => ({ count: state.count + 1 })),
+          }),
+          { enabled: true }
+        )
+      ) as unknown as CounterStoreWithCleanup
+
+    const storeA = createCounterStore()
+    const storeB = createCounterStore()
+
+    storeA.getState().increment()
+    storeA.zusoundCleanup()
+
+    await Promise.resolve()
+
+    expect(mockAudioContext.createOscillator).not.toHaveBeenCalled()
+
+    storeB.zusoundCleanup()
+  })
+
   it('keeps the shared audio engine alive until all stores are cleaned up', () => {
     type CounterStoreWithCleanup = StoreApi<CounterState> & {
       zusoundCleanup: () => void
@@ -386,28 +415,29 @@ describe('Zusound Middleware', () => {
       configuredZusound.cleanup()
     })
 
-    it('should function correctly when passed directly to store.subscribe', () => {
+    it('warns and no-ops when `zusound` is passed directly to store.subscribe', () => {
       const store = createStore<CounterState>((set) => ({
         count: 0,
         increment: () => set((state) => ({ count: state.count + 1 })),
       }))
 
-      // Use zusound as a subscriber
-      const unsubscribe = store.subscribe(zusound)
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const unsubscribe = store.subscribe(zusound as unknown as (state: CounterState, prev: CounterState) => void)
 
       expect(store.getState().count).toBe(0)
 
-      // Trigger a change
       store.getState().increment()
       expect(store.getState().count).toBe(1)
 
-      // AudioContext should have been initialized
-      expect(window.AudioContext).toHaveBeenCalled()
+      expect(window.AudioContext).not.toHaveBeenCalled()
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+      expect(warnSpy.mock.calls[0]?.[0]).toContain('createZusound')
 
       unsubscribe()
+      warnSpy.mockRestore()
     })
 
-    it('should not play sound if disabled in environment when used as subscriber', () => {
+    it('should not play sound if disabled in environment when used as explicit subscriber', () => {
       const originalEnv = process.env.NODE_ENV
       process.env.NODE_ENV = 'production'
 
@@ -416,15 +446,16 @@ describe('Zusound Middleware', () => {
         increment: () => set((state) => ({ count: state.count + 1 })),
       }))
 
-      const unsubscribe = store.subscribe(zusound)
+      const instance = createZusound()
+      const unsubscribe = store.subscribe(instance)
 
       store.getState().increment()
 
-      // Should not create AudioContext in production for subscriber
       expect(window.AudioContext).not.toHaveBeenCalled()
 
       process.env.NODE_ENV = originalEnv
       unsubscribe()
+      instance.cleanup()
     })
 
     it('supports configured subscriber via createZusound with debounce', async () => {

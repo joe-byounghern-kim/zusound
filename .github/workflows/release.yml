@@ -31,7 +31,6 @@ jobs:
     permissions:
       contents: write
       id-token: write
-      statuses: read
 
     steps:
       - name: Checkout
@@ -47,26 +46,8 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          registry-url: https://registry.npmjs.org
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: README sync check
-        run: pnpm readme:check
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Build
-        run: pnpm build
-
-      - name: Test Coverage
-        run: pnpm test:coverage
-
+      # ── Resolve & validate tag ─────────────────────────────────────────
       - name: Resolve release tag
         id: release_ctx
         run: |
@@ -77,20 +58,22 @@ jobs:
           fi
 
           if [ -z "$TAG" ] || [[ "$TAG" != v* ]]; then
-            echo "A valid release tag is required (example: v0.2.3)."
+            echo "::error::A valid release tag starting with 'v' is required (example: v0.2.3)."
             exit 1
           fi
 
           VERSION="${TAG#v}"
-          if [ -z "$VERSION" ] || [ "$VERSION" = "$TAG" ]; then
-            echo "Unable to derive version from tag '$TAG'."
+
+          # Strict semver: X.Y.Z or X.Y.Z-pre.N (no bare 'v' or garbage)
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?(\+[a-zA-Z0-9.]+)?$'; then
+            echo "::error::Tag '$TAG' is not valid semver (expected vX.Y.Z or vX.Y.Z-pre.N)."
             exit 1
           fi
 
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             git fetch origin --tags
             if ! git rev-parse "refs/tags/$TAG" >/dev/null 2>&1; then
-              echo "Tag '$TAG' does not exist on origin."
+              echo "::error::Tag '$TAG' does not exist on origin."
               exit 1
             fi
           fi
@@ -98,16 +81,19 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
+      # ── Checkout the exact tag commit ──────────────────────────────────
+      # Must happen BEFORE install/lint/build/test so CI always validates
+      # the tag's code, not the default branch (critical for workflow_dispatch).
       - name: Checkout release tag
         run: git checkout "${{ steps.release_ctx.outputs.tag }}"
 
+      # ── Safety guards ──────────────────────────────────────────────────
       - name: Tag lineage guard
-        id: lineage
         run: |
           git fetch origin main --tags
           TAG_SHA=$(git rev-list -n 1 "${{ steps.release_ctx.outputs.tag }}")
           if ! git merge-base --is-ancestor "$TAG_SHA" origin/main; then
-            echo "Tag commit ($TAG_SHA) is not reachable from origin/main."
+            echo "::error::Tag commit ($TAG_SHA) is not reachable from origin/main. Only tags on main can be released."
             exit 1
           fi
 
@@ -116,7 +102,7 @@ jobs:
         run: |
           PACKAGE_VERSION=$(node -e "console.log(JSON.parse(require('node:fs').readFileSync('packages/zusound/package.json', 'utf8')).version)")
           if [ "v${PACKAGE_VERSION}" != "${{ steps.release_ctx.outputs.tag }}" ]; then
-            echo "Tag '${{ steps.release_ctx.outputs.tag }}' does not match package version 'v${PACKAGE_VERSION}'."
+            echo "::error::Tag '${{ steps.release_ctx.outputs.tag }}' does not match package version 'v${PACKAGE_VERSION}'."
             exit 1
           fi
           echo "package_version=$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
@@ -124,33 +110,132 @@ jobs:
       - name: Skip if version already published
         id: published_guard
         run: |
-          PUBLISHED_VERSION=$(npm view zusound version 2>/dev/null || true)
-          if [ "$PUBLISHED_VERSION" = "${{ steps.package_version.outputs.package_version }}" ]; then
-            echo "Version $PUBLISHED_VERSION is already published. Skipping publish."
-            echo "should_publish=false" >> "$GITHUB_OUTPUT"
-            exit 0
+          PACKAGE_VERSION="${{ steps.package_version.outputs.package_version }}"
+          if npm view "zusound@$PACKAGE_VERSION" version >/dev/null 2>&1; then
+            echo "Version $PACKAGE_VERSION is already published. Skipping."
+            echo "should_publish_npm=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_publish_npm=true" >> "$GITHUB_OUTPUT"
           fi
-          echo "should_publish=true" >> "$GITHUB_OUTPUT"
 
-      - name: Validate token fallback secret
-        if: ${{ steps.published_guard.outputs.should_publish == 'true' && github.event.inputs.auth_mode == 'token' }}
+      - name: Skip if GitHub release already exists
+        id: gh_release_guard
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.release_ctx.outputs.tag }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "GitHub release for $TAG already exists. Skipping create."
+            echo "should_create_gh_release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_create_gh_release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ── CI checks (run on tag's code) ──────────────────────────────────
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: README sync check
+        run: pnpm readme:check
+
+      - name: Skills validation
+        run: pnpm skills:validate
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
+
+      - name: Test coverage
+        run: pnpm test:coverage
+
+      # ── Publish ────────────────────────────────────────────────────────
+      - name: Validate token secret
+        if: ${{ steps.published_guard.outputs.should_publish_npm == 'true' && github.event.inputs.auth_mode == 'token' }}
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           if [ -z "$NPM_TOKEN" ]; then
-            echo "NPM_TOKEN is required when auth_mode=token."
+            echo "::error::NPM_TOKEN secret is required when auth_mode=token."
             exit 1
           fi
 
-      - name: Publish package (OIDC)
-        if: ${{ steps.published_guard.outputs.should_publish == 'true' && github.event.inputs.auth_mode != 'token' }}
-        run: pnpm release
+      - name: Publish (OIDC provenance)
+        if: ${{ steps.published_guard.outputs.should_publish_npm == 'true' && github.event.inputs.auth_mode != 'token' }}
+        run: |
+          npm config delete //registry.npmjs.org/:_authToken || true
+          pnpm exec changeset publish
         env:
           NPM_CONFIG_PROVENANCE: true
+          NODE_AUTH_TOKEN: ''
 
-      - name: Publish package (token fallback)
-        if: ${{ steps.published_guard.outputs.should_publish == 'true' && github.event.inputs.auth_mode == 'token' }}
-        run: pnpm release
+      - name: Publish (token fallback)
+        if: ${{ steps.published_guard.outputs.should_publish_npm == 'true' && github.event.inputs.auth_mode == 'token' }}
+        run: |
+          npm config set //registry.npmjs.org/:_authToken "$NODE_AUTH_TOKEN"
+          npm config set registry https://registry.npmjs.org/
+          pnpm exec changeset publish
         env:
-          NPM_CONFIG_PROVENANCE: true
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # ── GitHub Release ─────────────────────────────────────────────────
+      - name: Create GitHub Release
+        if: ${{ steps.gh_release_guard.outputs.should_create_gh_release == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ steps.release_ctx.outputs.tag }}"
+          VERSION="${{ steps.release_ctx.outputs.version }}"
+
+          # Extract this version's section from the changeset-generated CHANGELOG
+          NOTES=$(node -e "
+            try {
+              const fs = require('node:fs');
+              const text = fs.readFileSync('packages/zusound/CHANGELOG.md', 'utf8');
+              const escaped = '$VERSION'.replace(/[.*+?^\${}()|[\]\\\\]/g, '\\\\$&');
+              const m = text.match(new RegExp('## ' + escaped + '[\\\\s\\\\S]*?(?=\\\\n## |$)'));
+              if (m) process.stdout.write(m[0].replace(/^## [^\\n]+\\n/, '').trim());
+            } catch (_) {}
+          " 2>/dev/null)
+
+          if [ -n "$NOTES" ]; then
+            gh release create "$TAG" \
+              --title "zusound $TAG" \
+              --notes "$NOTES" \
+              --verify-tag
+          else
+            # Fallback: auto-generate from commit history
+            gh release create "$TAG" \
+              --title "zusound $TAG" \
+              --generate-notes \
+              --verify-tag
+          fi
+
+      # ── Job summary ────────────────────────────────────────────────────
+      - name: Job summary
+        if: always()
+        run: |
+          TAG="${{ steps.release_ctx.outputs.tag }}"
+          VERSION="${{ steps.package_version.outputs.package_version }}"
+          PUBLISHED="${{ steps.published_guard.outputs.should_publish_npm }}"
+          GH_CREATED="${{ steps.gh_release_guard.outputs.should_create_gh_release }}"
+          AUTH="${{ github.event.inputs.auth_mode || 'oidc' }}"
+
+          {
+            echo "## Release: \`$TAG\`"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| **Version** | \`${VERSION:-n/a}\` |"
+            echo "| **Auth mode** | $AUTH |"
+            echo "| **Published to npm** | ${PUBLISHED:-skipped} |"
+            echo "| **Created GitHub Release** | ${GH_CREATED:-skipped} |"
+            if [ "$PUBLISHED" = "true" ]; then
+              echo "| **npm** | [zusound@$VERSION](https://www.npmjs.com/package/zusound/v/$VERSION) |"
+            fi
+            echo "| **GitHub Release** | [$TAG](https://github.com/${{ github.repository }}/releases/tag/$TAG) |"
+          } >> "$GITHUB_STEP_SUMMARY"

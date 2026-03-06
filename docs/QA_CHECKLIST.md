@@ -71,19 +71,29 @@
 - [ ] Reviewer confirmed: "Demo API docs synchronized with canonical API docs".
 - [ ] Quick row-by-row spot-check completed for `ZusoundOptions` and `AestheticParams` against canonical sources.
 
-## README Sync Rehearsal (Phase 16)
+## Skill Rollout Rehearsal (Phase 16)
 
-- [ ] Negative test: intentionally modify one line inside a root managed README sync section.
-- [ ] `pnpm readme:check` fails with remediation message `Run: pnpm readme:sync`.
-- [ ] Run `pnpm readme:sync`; rerun `pnpm readme:check`; check passes.
-- [ ] Positive flow passes full release sequence:
-  - `RELEASE_RANGE=origin/main..HEAD pnpm release:auto:dry-run`
+- [ ] Negative test: temporarily remove required frontmatter key (`name` or `description`) from one `SKILL.md`.
+- [ ] `pnpm skills:check` fails with actionable remediation output.
+- [ ] Restore valid frontmatter and rerun `pnpm skills:check`; check passes.
+- [ ] Generate local bridge output with `pnpm skills:bridge`.
+- [ ] Positive flow passes full quality sequence:
+  - `pnpm skills:validate`
   - `pnpm lint`
   - `pnpm typecheck`
   - `pnpm test:coverage`
   - `pnpm build`
-  - `pnpm -C packages/zusound exec npm pack --dry-run`
-- [ ] Capture command outputs (or CI links) in PR description for release sign-off evidence.
+- [ ] Capture command outputs (or CI links) in PR description for rollout sign-off evidence.
+
+## User-Facing Skill Rehearsal (Phase 17)
+
+- [ ] Run `pnpm skills:validate` and confirm all user-facing skills pass.
+- [ ] Run `pnpm skills:bridge` and confirm `.claude/skills/zusound-onboarding.md` exists.
+- [ ] Confirm `.claude/skills/zusound-tuning.md` exists.
+- [ ] Confirm `.claude/skills/zusound-debugging.md` exists.
+- [ ] Confirm `.claude/skills/zusound-migration.md` exists.
+- [ ] Do one dry-run per skill and capture: trigger, input, expected stop condition, outcome.
+- [ ] Record remediation path for at least one negative-path scenario.
 
 ## Phase 15 QA Sign-Off Log
 
