@@ -54,6 +54,8 @@ zs.cleanup()
 
 Use a fresh `createZusound(...)` instance for each subscriber attachment.
 
+For quick experiments, `useStore.subscribe(zusound)` also remains supported.
+
 ## 3) Trigger state updates
 
 Click around your app or call actions in dev tools. You should hear feedback per state change.
