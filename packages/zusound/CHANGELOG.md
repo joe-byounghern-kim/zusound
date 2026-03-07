@@ -1,5 +1,17 @@
 # zusound
 
+## 0.2.3
+
+### Patch Changes
+
+- Restore direct `store.subscribe(zusound)` compatibility while keeping safer queued playback cleanup behavior.
+
+## 0.2.2
+
+### Patch Changes
+
+- [#61](https://github.com/joe-byounghern-kim/zusound/pull/61) [`241243f`](https://github.com/joe-byounghern-kim/zusound/commit/241243f4f38bedf7b3eb915c445fbe56070daee5) Thanks [@joe-byounghern-kim](https://github.com/joe-byounghern-kim)! - update docs
+
 ## 0.2.1
 
 ### Patch Changes
