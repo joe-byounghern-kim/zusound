@@ -9,8 +9,12 @@ Zusound uses npm trusted publishing through GitHub Actions OIDC.
 - GitHub workflow: `.github/workflows/release.yml`
 - GitHub environment: `npm-publish`
 - GitHub permission required in release job: `id-token: write`
+- npm CLI required for trusted publishing: `>=11.5.1`
 - Default publish auth: OIDC (no token required on normal `main` release runs)
 - Optional fallback auth: repository `NPM_TOKEN` secret, used only via manual `workflow_dispatch` (`auth_mode=token`)
+
+Current GitHub-hosted Node 22 runners still default to npm `10.x`, so the release
+workflow explicitly upgrades npm before publishing.
 
 Note for local/manual `changeset version` runs: `@changesets/changelog-github` requires `GITHUB_TOKEN` in environment.
 GitHub Actions already provides built-in `${{ github.token }}`; you cannot create a secret named `GITHUB_TOKEN` because `GITHUB_` prefix is reserved.
