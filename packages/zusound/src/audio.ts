@@ -75,6 +75,7 @@ type PlaySoundOptions = {
   performanceMode?: boolean
   onError?: ZusoundOptions['onError']
   startOffset?: number
+  isPlaybackActive?: () => boolean
 }
 
 /**
@@ -312,12 +313,14 @@ export async function playSound(
   change: Change,
   volumeOrOptions: number | PlaySoundOptions = 0.3
 ): Promise<void> {
-  const ctx = getAudioContext()
-  if (!ctx) return
-
   const globalVolume =
     typeof volumeOrOptions === 'number' ? volumeOrOptions : (volumeOrOptions.globalVolume ?? 0.3)
   const options = typeof volumeOrOptions === 'number' ? undefined : volumeOrOptions
+
+  if (options?.isPlaybackActive && !options.isPlaybackActive()) return
+
+  const ctx = getAudioContext()
+  if (!ctx) return
 
   // Resume context if needed (for autoplay policies)
   if (ctx.state === 'suspended') {
@@ -329,6 +332,7 @@ export async function playSound(
     }
   }
 
+  if (options?.isPlaybackActive && !options.isPlaybackActive()) return
   if (ctx.state !== 'running') return
 
   const base = defaultAesthetics(change)
@@ -361,6 +365,8 @@ export async function playSound(
   const spreadSeconds = (1 - mapped.aesthetics.simultaneity) * durationSeconds * 0.8
 
   scheduleAudioTask(ctx, startTime, () => {
+    if (options?.isPlaybackActive && !options.isPlaybackActive()) return
+
     const baseStart = Math.max(startTime, ctx.currentTime + 0.001)
     const startA = baseStart
     const startB = baseStart + Math.max(0, spreadSeconds)

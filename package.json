@@ -1,6 +1,6 @@
 {
   "name": "zusound-monorepo",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": false,
   "description": "Zusound - Audio feedback middleware for Zustand",
   "repository": {
@@ -19,6 +19,7 @@
     "build:watch": "turbo run build:watch",
     "changeset": "changeset",
     "clean": "turbo run clean && rm -rf node_modules",
+    "clean:artifacts": "node scripts/clean-local-artifacts.mjs",
     "dev": "turbo run dev",
     "demo:stage": "pnpm build && pnpm -C demo run stage",
     "demo:stage:clean": "pnpm -C demo run clean-stage",
@@ -32,6 +33,10 @@
     "prepare": "husky install",
     "readme:check": "node scripts/sync-readme.mjs --check",
     "readme:sync": "node scripts/sync-readme.mjs",
+    "skills:bridge": "node scripts/build-skill-bridge.mjs",
+    "skills:check": "node scripts/check-skills.mjs",
+    "skills:validate": "pnpm skills:check",
+    "publish:package": "npm publish --workspace=packages/zusound",
     "release": "turbo run build && changeset publish",
     "release:auto:prepare": "node scripts/create-auto-changeset.mjs && pnpm version-packages",
     "release:auto:dry-run": "node scripts/create-auto-changeset.mjs --dry-run",

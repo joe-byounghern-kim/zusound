@@ -31,22 +31,30 @@ export const useStore = create<Store>()(
 )
 ```
 
-### Approach B: Direct Subscriber (New!)
+### Approach B: Explicit Subscriber Attachment
 
-If you don't want to wrap your store, you can simply subscribe to it directly:
+If you don't want to wrap your store, attach a dedicated subscriber instance:
 
 ```typescript
+import { createZusound } from 'zusound'
+
 export const useStore = create<Store>()((set) => ({
   count: 0,
   inc: () => set((state) => ({ count: state.count + 1 })),
   dec: () => set((state) => ({ count: state.count - 1 })),
 }))
 
-// Automatically hear state changes
-useStore.subscribe(zusound)
+const zs = createZusound()
+const unsubscribe = useStore.subscribe(zs)
+
+// Later
+unsubscribe()
+zs.cleanup()
 ```
 
-Need explicit teardown for dynamically managed listeners? Use `createZusound(...)` and call both `unsubscribe()` and `instance.cleanup()`.
+Use a fresh `createZusound(...)` instance for each subscriber attachment.
+
+For quick experiments, `useStore.subscribe(zusound)` also remains supported.
 
 ## 3) Trigger state updates
 
@@ -86,6 +94,18 @@ const store = create(
 - Too much CPU on high update rates: enable `performanceMode`.
 
 ## Next Steps
+
+- User-facing skills (canonical):
+  - `.agents/skills/zusound-onboarding/SKILL.md`
+  - `.agents/skills/zusound-tuning/SKILL.md`
+  - `.agents/skills/zusound-debugging/SKILL.md`
+  - `.agents/skills/zusound-migration/SKILL.md`
+- Validate + generate local bridge output:
+
+```bash
+pnpm skills:validate
+pnpm skills:bridge
+```
 
 - Full package API: `packages/zusound/README.md`
 - Development workflow: `DEVELOPMENT.md`

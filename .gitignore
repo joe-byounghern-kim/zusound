@@ -48,6 +48,8 @@ Thumbs.db
 
 demo/dist-site
 .save
+.omx
+.omc
 tasks
 .reports
 .claude

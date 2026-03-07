@@ -293,6 +293,35 @@ describe('Zusound Middleware', () => {
     expect(() => (store as any).zusoundCleanup()).not.toThrow()
   })
 
+  it('suppresses queued playback after cleanup while another store keeps the audio engine alive', async () => {
+    type CounterStoreWithCleanup = StoreApi<CounterState> & {
+      zusoundCleanup: () => void
+    }
+
+    const createCounterStore = (): CounterStoreWithCleanup =>
+      createStore<CounterState>(
+        zusound(
+          (set) => ({
+            count: 0,
+            increment: () => set((state) => ({ count: state.count + 1 })),
+          }),
+          { enabled: true }
+        )
+      ) as unknown as CounterStoreWithCleanup
+
+    const storeA = createCounterStore()
+    const storeB = createCounterStore()
+
+    storeA.getState().increment()
+    storeA.zusoundCleanup()
+
+    await Promise.resolve()
+
+    expect(mockAudioContext.createOscillator).not.toHaveBeenCalled()
+
+    storeB.zusoundCleanup()
+  })
+
   it('keeps the shared audio engine alive until all stores are cleaned up', () => {
     type CounterStoreWithCleanup = StoreApi<CounterState> & {
       zusoundCleanup: () => void
@@ -392,16 +421,13 @@ describe('Zusound Middleware', () => {
         increment: () => set((state) => ({ count: state.count + 1 })),
       }))
 
-      // Use zusound as a subscriber
       const unsubscribe = store.subscribe(zusound)
 
       expect(store.getState().count).toBe(0)
 
-      // Trigger a change
       store.getState().increment()
       expect(store.getState().count).toBe(1)
 
-      // AudioContext should have been initialized
       expect(window.AudioContext).toHaveBeenCalled()
 
       unsubscribe()
@@ -420,7 +446,6 @@ describe('Zusound Middleware', () => {
 
       store.getState().increment()
 
-      // Should not create AudioContext in production for subscriber
       expect(window.AudioContext).not.toHaveBeenCalled()
 
       process.env.NODE_ENV = originalEnv

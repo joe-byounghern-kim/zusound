@@ -89,6 +89,9 @@ unsubscribe()
 zs.cleanup()
 ```
 
+Use a fresh `createZusound(...)` instance for each `store.subscribe(...)` attachment when
+you want explicit lifecycle control.
+
 <!-- README_SYNC:SECTION_END:create-zusound -->
 
 <!-- README_SYNC:SECTION_START:zusound-options -->
@@ -209,6 +212,24 @@ Release gate setup (GitHub environment + npm trusted publisher) is documented in
 - Release gates: `docs/RELEASE_GATES.md`
 - Security policy: `SECURITY.md`
 - Technical requirements baseline: `REQUIREMENTS.MD`
+
+## User-Facing Skill Pack
+
+The canonical user-facing skills live in `.agents/skills/`:
+
+- `zusound-onboarding`
+- `zusound-tuning`
+- `zusound-debugging`
+- `zusound-migration`
+
+Run the distribution path locally:
+
+```bash
+pnpm skills:validate
+pnpm skills:bridge
+```
+
+Then load generated local bridge files from `.claude/skills/`.
 
 ## Demo
 
