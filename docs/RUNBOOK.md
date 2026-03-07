@@ -71,6 +71,20 @@ pnpm demo:preview
 
 If preview/verification is good, trigger `Deploy Demo to GitHub Pages` with `workflow_dispatch`.
 
+### Local artifact reset
+
+When local generated state gets in the way but you do not want to reinstall
+dependencies, use:
+
+```bash
+pnpm clean:artifacts -- --dry-run
+pnpm clean:artifacts
+```
+
+This removes ignored build outputs plus local OMX/tooling artifacts such as
+`demo/dist-site`, `dist`, `.omx`, `.omc`, `.reports`, `.save`, `.claude`,
+`codemaps`, and `tasks`.
+
 ### Skill system rollout (Phase 16)
 
 Use this flow when adding or updating reusable agent skills:

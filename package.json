@@ -19,6 +19,7 @@
     "build:watch": "turbo run build:watch",
     "changeset": "changeset",
     "clean": "turbo run clean && rm -rf node_modules",
+    "clean:artifacts": "node scripts/clean-local-artifacts.mjs",
     "dev": "turbo run dev",
     "demo:stage": "pnpm build && pnpm -C demo run stage",
     "demo:stage:clean": "pnpm -C demo run clean-stage",

@@ -56,29 +56,33 @@ pnpm demo:preview
 
 `package.json` has no script comments, so descriptions below are inferred from script names and commands.
 
-| Script                 | Command                                                  | Description                                    |
-| ---------------------- | -------------------------------------------------------- | ---------------------------------------------- |
-| `build`                | `turbo run build`                                        | Build all workspace packages/apps.             |
-| `build:watch`          | `turbo run build:watch`                                  | Run build watchers across workspaces.          |
-| `changeset`            | `changeset`                                              | Create a release changeset.                    |
-| `clean`                | `turbo run clean && rm -rf node_modules`                 | Clean workspace outputs and root dependencies. |
-| `dev`                  | `turbo run dev`                                          | Run workspace development tasks.               |
-| `demo:stage`           | `pnpm build && pnpm -C demo run stage`                   | Build and stage static demo artifact.          |
-| `demo:stage:clean`     | `pnpm -C demo run clean-stage`                           | Remove staged demo output.                     |
-| `demo:verify`          | `pnpm -C demo run check-stage`                           | Validate staged demo artifact integrity.       |
-| `demo:preview`         | `python3 -m http.server 4173 --directory demo/dist-site` | Preview staged demo artifact locally.          |
-| `demo:react:dev`       | `pnpm -C examples dev`                                   | Run React TypeScript demo in dev mode.         |
-| `demo:react:build`     | `pnpm -C examples build`                                 | Build React TypeScript demo.                   |
-| `demo:react:typecheck` | `pnpm -C examples typecheck`                             | Typecheck React TypeScript demo.               |
-| `format`               | `prettier --write "**/*.{ts,tsx,js,jsx,json,md,yml}"`    | Format repository files.                       |
-| `lint`                 | `turbo run lint`                                         | Run lint tasks across workspaces.              |
-| `prepare`              | `husky install`                                          | Install git hooks.                             |
-| `release`              | `turbo run build && changeset publish`                   | Build and publish packages.                    |
-| `test`                 | `turbo run test`                                         | Run workspace tests.                           |
-| `test:coverage`        | `turbo run test:coverage`                                | Run workspace tests with coverage.             |
-| `test:watch`           | `turbo run test:watch`                                   | Run tests in watch mode.                       |
-| `typecheck`            | `turbo run typecheck`                                    | Run TypeScript checks across workspaces.       |
-| `version-packages`     | `changeset version`                                      | Apply version bumps from changesets.           |
+| Script                 | Command                                                  | Description                                                           |
+| ---------------------- | -------------------------------------------------------- | --------------------------------------------------------------------- |
+| `build`                | `turbo run build`                                        | Build all workspace packages/apps.                                    |
+| `build:watch`          | `turbo run build:watch`                                  | Run build watchers across workspaces.                                 |
+| `changeset`            | `changeset`                                              | Create a release changeset.                                           |
+| `clean`                | `turbo run clean && rm -rf node_modules`                 | Clean workspace outputs and root dependencies.                        |
+| `clean:artifacts`      | `node scripts/clean-local-artifacts.mjs`                 | Remove ignored local build/demo/tool artifacts without touching deps. |
+| `dev`                  | `turbo run dev`                                          | Run workspace development tasks.                                      |
+| `demo:stage`           | `pnpm build && pnpm -C demo run stage`                   | Build and stage static demo artifact.                                 |
+| `demo:stage:clean`     | `pnpm -C demo run clean-stage`                           | Remove staged demo output.                                            |
+| `demo:verify`          | `pnpm -C demo run check-stage`                           | Validate staged demo artifact integrity.                              |
+| `demo:preview`         | `python3 -m http.server 4173 --directory demo/dist-site` | Preview staged demo artifact locally.                                 |
+| `demo:react:dev`       | `pnpm -C examples dev`                                   | Run React TypeScript demo in dev mode.                                |
+| `demo:react:build`     | `pnpm -C examples build`                                 | Build React TypeScript demo.                                          |
+| `demo:react:typecheck` | `pnpm -C examples typecheck`                             | Typecheck React TypeScript demo.                                      |
+| `format`               | `prettier --write "**/*.{ts,tsx,js,jsx,json,md,yml}"`    | Format repository files.                                              |
+| `lint`                 | `turbo run lint`                                         | Run lint tasks across workspaces.                                     |
+| `prepare`              | `husky install`                                          | Install git hooks.                                                    |
+| `release`              | `turbo run build && changeset publish`                   | Build and publish packages.                                           |
+| `test`                 | `turbo run test`                                         | Run workspace tests.                                                  |
+| `test:coverage`        | `turbo run test:coverage`                                | Run workspace tests with coverage.                                    |
+| `test:watch`           | `turbo run test:watch`                                   | Run tests in watch mode.                                              |
+| `typecheck`            | `turbo run typecheck`                                    | Run TypeScript checks across workspaces.                              |
+| `version-packages`     | `changeset version`                                      | Apply version bumps from changesets.                                  |
+
+Use `pnpm clean:artifacts -- --dry-run` to preview which ignored local paths
+would be removed before doing a full local reset.
 
 ## Testing Procedures
 
