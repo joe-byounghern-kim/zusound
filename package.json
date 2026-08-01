@@ -1,7 +1,6 @@
 {
   "name": "zusound-monorepo",
-  "version": "0.2.1",
-  "private": false,
+  "private": true,
   "description": "Zusound - Audio feedback middleware for Zustand",
   "repository": {
     "type": "git",
@@ -41,33 +40,42 @@
     "release:auto:prepare": "node scripts/create-auto-changeset.mjs && pnpm version-packages",
     "release:auto:dry-run": "node scripts/create-auto-changeset.mjs --dry-run",
     "test": "turbo run test",
+    "test:clean-artifacts": "node --test scripts/clean-local-artifacts.test.mjs",
     "test:coverage": "turbo run test:coverage",
     "test:watch": "turbo run test:watch",
     "typecheck": "turbo run typecheck",
     "version-packages": "changeset version"
   },
   "devDependencies": {
-    "@changesets/changelog-github": "^0.5.1",
+    "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^2.27.1",
+    "@eslint/js": "^9.39.5",
     "@types/node": "^20.11.0",
-    "@typescript-eslint/eslint-plugin": "^8.56.0",
-    "@typescript-eslint/parser": "^8.56.0",
-    "eslint": "^8.57.1",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-react": "^7.33.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.26",
-    "globals": "^15.15.0",
+    "@typescript-eslint/eslint-plugin": "^8.65.0",
+    "@typescript-eslint/parser": "^8.65.0",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^16.5.0",
     "husky": "^8.0.3",
     "lint-staged": "^15.2.0",
     "prettier": "^3.2.4",
-    "turbo": "^1.11.3",
-    "typescript": "^5.3.3",
-    "zustand": "^4.4.7"
+    "turbo": "^2.9.14",
+    "typescript": "^5.3.3"
   },
-  "packageManager": "pnpm@8.14.1",
+  "packageManager": "pnpm@10.34.5",
   "engines": {
-    "node": ">=18"
+    "node": ">=20.19.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ],
+    "overrides": {
+      "esbuild": "0.28.1"
+    }
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [

@@ -2,30 +2,16 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { artifactTargets } from './clean-local-artifact-targets.mjs'
+
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const rootDir = path.resolve(__dirname, '..')
 const dryRun = process.argv.includes('--dry-run')
 
-const targets = [
-  'dist',
-  'packages/zusound/dist',
-  'packages/zusound/coverage',
-  'examples/dist',
-  'demo/dist-site',
-  '.turbo',
-  '.omx',
-  '.omc',
-  '.reports',
-  '.save',
-  '.sisyphus',
-  '.claude',
-  'codemaps',
-  'tasks',
-  'tasks.md',
-]
-
-const existingTargets = targets.filter((target) => fs.existsSync(path.join(rootDir, target)))
+const existingTargets = artifactTargets.filter((target) =>
+  fs.existsSync(path.join(rootDir, target))
+)
 
 if (existingTargets.length === 0) {
   console.log(

@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [18, 20]
+        node-version: [20, 22]
 
     steps:
       - name: Checkout
@@ -42,6 +42,9 @@ jobs:
       - name: Skills validation
         run: pnpm skills:validate
 
+      - name: Cleanup regression
+        run: pnpm test:clean-artifacts
+
       - name: Lint
         run: pnpm lint
 
@@ -53,6 +56,39 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  library-node18:
+    name: Library compatibility (Node 18)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
+
+      - name: Setup Node.js for dependency install
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install package dependency graph
+        run: pnpm --filter zusound... install --frozen-lockfile
+
+      - name: Setup Node.js for compatibility checks
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 18
+
+      - name: Typecheck package
+        run: pnpm -C packages/zusound typecheck
+
+      - name: Build package
+        run: pnpm -C packages/zusound build
+
+      - name: Test package
+        run: pnpm -C packages/zusound test
 
   zustand-compat:
     name: Zustand Compat (${{ matrix.label }})

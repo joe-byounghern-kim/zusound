@@ -4,8 +4,10 @@ This guide describes the local workflow for contributing to Zusound.
 
 ## Prerequisites
 
-- Node.js `>= 18`
-- `pnpm` (workspace uses `pnpm@8.14.1`)
+- Node.js `>= 20.19.0` for repository development
+- `pnpm` (workspace uses `pnpm@10.34.5`)
+
+The published library remains covered on Node 18 through the package-only CI compatibility lane.
 
 ## Install
 
