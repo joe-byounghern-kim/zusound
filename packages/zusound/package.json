@@ -1,6 +1,6 @@
 {
   "name": "zusound",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Hear bugs before you see them - audio debugging for Zustand",
   "keywords": [
     "zustand",
