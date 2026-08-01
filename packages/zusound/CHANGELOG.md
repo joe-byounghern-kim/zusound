@@ -1,5 +1,11 @@
 # zusound
 
+## 0.2.4
+
+### Patch Changes
+
+- Automated release from main merge (f6bdf79).
+
 ## 0.2.3
 
 ### Patch Changes

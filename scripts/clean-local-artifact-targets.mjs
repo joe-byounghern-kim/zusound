@@ -1,0 +1,18 @@
+export const artifactTargets = Object.freeze([
+  'dist',
+  'packages/zusound/dist',
+  'packages/zusound/coverage',
+  'examples/dist',
+  'demo/dist-site',
+  '.turbo',
+  'examples/.turbo',
+  'packages/zusound/.turbo',
+  '.omx',
+  '.omc',
+  '.reports',
+  '.save',
+  '.sisyphus',
+  '.claude',
+  'codemaps',
+  'tasks',
+])

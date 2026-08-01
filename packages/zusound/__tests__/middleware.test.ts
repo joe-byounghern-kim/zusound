@@ -174,28 +174,37 @@ describe('Zusound Middleware', () => {
     const attachCleanup = vi.fn()
     const onError = vi.fn()
     const subscribeError = new Error('subscribe failed')
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
 
-    const handle = attachZusound(
-      {
-        getState: () => ({ count: 0 }),
-        subscribe: () => {
-          throw subscribeError
+    try {
+      const handle = attachZusound(
+        {
+          getState: () => ({ count: 0 }),
+          subscribe: () => {
+            throw subscribeError
+          },
+          attachCleanup,
         },
-        attachCleanup,
-      },
-      {
-        enabled: true,
-        onError,
-      }
-    )
+        {
+          enabled: true,
+          onError,
+        }
+      )
 
-    expect(onError).toHaveBeenCalledTimes(1)
-    expect(onError.mock.calls[0]?.[0]).toBe(subscribeError)
-    expect(onError.mock.calls[0]?.[1]).toMatchObject({ stage: 'state-change-processing' })
-
-    expect(typeof handle.cleanup).toBe('function')
-    expect(() => handle.cleanup()).not.toThrow()
-    expect(attachCleanup).toHaveBeenCalledTimes(1)
+      expect(warnSpy).toHaveBeenCalledTimes(1)
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Zusound: Failed to attach subscription',
+        subscribeError
+      )
+      expect(onError).toHaveBeenCalledTimes(1)
+      expect(onError.mock.calls[0]?.[0]).toBe(subscribeError)
+      expect(onError.mock.calls[0]?.[1]).toMatchObject({ stage: 'state-change-processing' })
+      expect(typeof handle.cleanup).toBe('function')
+      expect(() => handle.cleanup()).not.toThrow()
+      expect(attachCleanup).toHaveBeenCalledTimes(1)
+    } finally {
+      warnSpy.mockRestore()
+    }
   })
 
   it('releases attached audio resources when middleware initializer throws', () => {
