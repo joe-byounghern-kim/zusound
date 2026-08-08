@@ -103,7 +103,7 @@ The exact tree may retain standard configuration files not shown above. No secon
 ### Development runtime
 
 - Set `engines.node` to `>=22.22.2`.
-- Set `.nvmrc` to the selected Node 24 LTS patch release, at least `24.15.0`.
+- Set `.nvmrc` to Node `24.19.0`, the current Node 24 LTS patch release.
 - Pin the workspace package manager to pnpm `11.20.0`.
 - Run full CI quality gates on the minimum supported Node 22.22 line and Node 24 LTS.
 - Remove the Node 18 build/test job. Node 18 is end-of-life and blocks current development tools.
@@ -148,13 +148,13 @@ Apply upgrades in independently verifiable groups:
 6. Changesets, Turbo, Prettier, tsup, React types, Zustand development versions, and remaining compatible patch/minor updates.
 7. GitHub Actions revisions and package-manager setup consistency.
 
-Regenerate `pnpm-lock.yaml` through pnpm 11. Do not hand-edit resolved entries.
+Regenerate `pnpm-lock.yaml` through pnpm 11. Do not hand-edit resolved entries. Move pnpm project settings out of the root manifest and into `pnpm-workspace.yaml`, because pnpm 11 no longer reads `pnpm.overrides` or dependency build-policy keys from `package.json`.
 
 ### Overrides and build scripts
 
-- Remove the exact esbuild override if the upgraded graph naturally selects a secure supported release and every build passes.
-- Retain an exact override only when a current advisory cannot be resolved by upgrading a direct parent and the selected version satisfies every parent range.
-- Keep `esbuild` as the sole explicitly allowed dependency build script.
+- Keep an exact `esbuild: 0.28.1` override in `pnpm-workspace.yaml`. The trial graph otherwise resolves vulnerable `esbuild@0.27.7`; 0.28.1 is the newest patched release admitted by pnpm 11's built-in release-age policy on the design date.
+- Configure `allowBuilds.esbuild: true` in `pnpm-workspace.yaml`; all unlisted dependency build scripts remain blocked by pnpm 11.
+- Do not add release-age exclusions merely to install a package published less than one day ago.
 - Final audit metadata must report zero vulnerabilities at every severity.
 
 ## Demo Consolidation
@@ -316,7 +316,7 @@ The modernization is complete only when all of the following are observed from t
 12. The packed package contains only intended distributable files and passes Publint and package-exports/type validation.
 13. Tarball consumer checks pass with oldest supported Zustand 4, latest Zustand 4, and latest Zustand 5.
 14. The GitHub Pages demo loads with no missing assets or console errors and its required interaction paths work.
-15. `pnpm outdated --recursive` reports only explicitly documented compatibility constraints, chiefly TypeScript and Node typings when newer incompatible families exist.
+15. `pnpm outdated --recursive` reports only explicitly documented compatibility constraints: TypeScript 5.9, Node 24 typings, and the mature patched esbuild 0.28.1 override while pnpm's one-day release-age policy excludes a newer release.
 16. The final Git diff contains no generated build outputs, temporary package tarballs, or unrelated changes.
 17. The public API, package version, runtime behavior, and Zustand peer range remain unchanged.
 
