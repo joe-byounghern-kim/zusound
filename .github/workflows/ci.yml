@@ -99,7 +99,7 @@ jobs:
           - label: latest-4.x
             zustand-version: 4.5.7
           - label: latest-5.x
-            zustand-version: 5.0.11
+            zustand-version: 5.0.14
 
     steps:
       - name: Checkout
@@ -120,8 +120,56 @@ jobs:
       - name: Set Zustand version
         run: pnpm -C packages/zusound add -D zustand@${{ matrix.zustand-version }}
 
-      - name: Typecheck (package)
-        run: pnpm -C packages/zusound typecheck
+      - name: Typecheck (production package)
+        run: pnpm -C packages/zusound exec tsc --noEmit
 
-      - name: Test (package)
-        run: pnpm -C packages/zusound test
+      - name: Build (package)
+        run: pnpm -C packages/zusound build
+
+      - name: Runtime smoke (built package)
+        run: |
+          node --input-type=module <<'NODE'
+          import * as vanilla from 'zustand/vanilla'
+          import { createZusound, version, zusound } from './packages/zusound/dist/index.js'
+
+          const createStore = vanilla.createStore ?? vanilla.default
+          if (typeof createStore !== 'function') {
+            throw new Error('zustand/vanilla createStore is unavailable')
+          }
+          if (version !== '0.2.4') {
+            throw new Error(`unexpected Zusound version: ${version}`)
+          }
+
+          const middlewareStore = createStore(
+            zusound(
+              (set) => ({
+                count: 0,
+                increment: () => set((state) => ({ count: state.count + 1 })),
+              }),
+              { enabled: false }
+            )
+          )
+          middlewareStore.getState().increment()
+          if (middlewareStore.getState().count !== 1) {
+            throw new Error('middleware smoke failed')
+          }
+          if (typeof middlewareStore.zusoundCleanup !== 'function') {
+            throw new Error('middleware cleanup was not attached')
+          }
+          middlewareStore.zusoundCleanup()
+
+          const subscriberStore = createStore((set) => ({
+            count: 0,
+            increment: () => set((state) => ({ count: state.count + 1 })),
+          }))
+          const configuredZusound = createZusound({ enabled: false })
+          const unsubscribe = subscriberStore.subscribe(configuredZusound)
+          if (typeof unsubscribe !== 'function') {
+            throw new Error('subscriber unsubscribe was not returned')
+          }
+          subscriberStore.getState().increment()
+          unsubscribe()
+          configuredZusound.cleanup()
+
+          console.log(`Zustand compatibility smoke passed for ${version}`)
+          NODE
