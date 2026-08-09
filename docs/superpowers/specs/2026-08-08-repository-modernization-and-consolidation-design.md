@@ -21,12 +21,12 @@ The design is based on a clean `dev` checkout and fresh local inspection:
 - The repository contains two overlapping demos: a 2,163-line vanilla demo with custom serving/staging/vendoring code and a 1,808-line strict React/Vite demo.
 - The root README references a missing `docs/assets/demo-preview.gif`.
 - Several documents are completed phase records, rollout rehearsals, duplicated command catalogs, or implementation research rather than current user or contributor documentation.
-- `.env.example` claims no environment variables are required but contains a placeholder `GITHUB_TOKEN` assignment.
+- `.env.example` claims no environment variables are required but contains an empty `GITHUB_TOKEN` assignment.
 - `packages/zusound/.npmignore` duplicates the package manifest's `files` allowlist and does not match the observed packed source-map contents.
 
 ## Design Principles
 
-1. **Delete before upgrading.** Remove dependencies, files, and workflows that no longer provide enough value to maintain.
+1. **Delete rather than preserve.** Remove dependencies, files, and workflows as soon as their replacement or redundancy is verified. Do not carry obsolete surfaces into the final tree.
 2. **Latest coherent stable beats literal latest.** Use the newest stable versions that satisfy each other's documented engines and peer ranges. Do not introduce prereleases merely to satisfy a dist-tag metric.
 3. **One canonical surface per responsibility.** Keep one deployable demo, one contributor guide, one release guide, and one concise skill-system guide.
 4. **Public compatibility is explicit.** Preserve the package's exports, behavior, zero-runtime-dependency policy, and `zustand >=4 <6` peer contract.
@@ -64,6 +64,7 @@ The maintained product surfaces will be:
 .github/
   dependabot.yml
   workflows/
+.tool-versions
 demo/
   src/
   package.json
@@ -80,7 +81,10 @@ packages/
     CHANGELOG.md
 scripts/
   build-skill-bridge.mjs
+  check-audit.mjs
+  check-automation.mjs
   check-docs.mjs
+  check-outdated.mjs
   check-skills.mjs
   create-auto-changeset.mjs
   sync-readme.mjs
@@ -104,6 +108,7 @@ The exact tree may retain standard configuration files not shown above. No secon
 
 - Set `engines.node` to `>=22.22.2`.
 - Set `.nvmrc` to Node `24.19.0`, the current Node 24 LTS patch release.
+- Add `.tool-versions` with Node `24.19.0` and `22.22.2` so the exact local verification matrix is declared in the repository. Document mise as the maintainer tool for installing and executing both versions.
 - Pin the workspace package manager to pnpm `11.20.0`.
 - Run full CI quality gates on the minimum supported Node 22.22 line and Node 24 LTS.
 - Remove the Node 18 build/test job. Node 18 is end-of-life and blocks current development tools.
@@ -113,6 +118,7 @@ The exact tree may retain standard configuration files not shown above. No secon
 - Keep build target `ES2020`.
 - Keep zero runtime dependencies.
 - Keep `zustand >=4.0.0 <6.0.0` as the only peer dependency.
+- Keep the existing ESM and CJS runtime entry paths while splitting conditional declaration paths so ESM resolves `dist/index.d.ts` and CommonJS resolves `dist/index.d.cts`.
 - Keep compatibility validation for oldest supported Zustand 4, latest Zustand 4, and latest Zustand 5.
 - Validate the packed artifact as a consumer rather than requiring modern development tools to execute on Node 18.
 
@@ -124,17 +130,20 @@ The exact tree may retain standard configuration files not shown above. No secon
 
 ## Dependency Modernization
 
-### Delete first
+### Dependencies removed from the final graph
 
-Remove these direct dependencies before upgrading:
+Remove these direct dependencies in their earliest safe task:
 
 - Root `eslint-plugin-react`, because the ESLint configuration does not import or use it and its current peer range does not support ESLint 10.
+- Root `@types/node`, because the root has no TypeScript project and both typed workspaces declare Node typings for their own configuration files.
 - Package `html-encoding-sniffer`, because it is not imported and creates a second unused copy beside jsdom's real transitive dependency.
 - Root `zustand`, after the legacy demo is removed and the consolidated demo owns its dependency directly.
 
 Retain the package's direct Vite dependency and upgrade it to Vite 8 because Vitest 4 declares Vite as a non-optional peer. Configure Knip to recognize this peer-satisfaction dependency as intentional.
 
 Retain and upgrade Husky and lint-staged. Migrate their configuration and hook format to the latest stable supported syntax.
+
+Add the latest stable npm-distributed workflow and Dependabot schema validators so automation validation is versioned in the dependency graph and runnable through pnpm on every supported platform.
 
 ### Upgrade families
 
@@ -146,13 +155,13 @@ Apply upgrades in independently verifiable groups:
 4. React demo build stack: Vite 8 and React plugin 6.
 5. Husky 9 and lint-staged 17, including hook-format migration.
 6. Changesets, Turbo, Prettier, tsup, React types, Zustand development versions, and remaining compatible patch/minor updates.
-7. GitHub Actions revisions and package-manager setup consistency.
+7. GitHub Actions revisions, workflow/Dependabot schema validators, and package-manager setup consistency.
 
 Regenerate `pnpm-lock.yaml` through pnpm 11. Do not hand-edit resolved entries. Move pnpm project settings out of the root manifest and into `pnpm-workspace.yaml`, because pnpm 11 no longer reads `pnpm.overrides` or dependency build-policy keys from `package.json`.
 
 ### Overrides and build scripts
 
-- Keep an exact `esbuild: 0.28.1` override in `pnpm-workspace.yaml`. The trial graph otherwise resolves vulnerable `esbuild@0.27.7`; 0.28.1 is the newest patched release admitted by pnpm 11's built-in release-age policy on the design date.
+- Keep exact `esbuild: 0.28.1` and `nanoid: 3.3.18` overrides in `pnpm-workspace.yaml`. The verified natural graph resolves vulnerable `esbuild@0.27.7` and can resolve vulnerable `nanoid@3.3.16`; both overrides are the newest patched versions accepted by the final graph on the design date.
 - Configure `allowBuilds.esbuild: true` in `pnpm-workspace.yaml`; all unlisted dependency build scripts remain blocked by pnpm 11.
 - Do not add release-age exclusions merely to install a package published less than one day ago.
 - Final audit metadata must report zero vulnerabilities at every severity.
@@ -188,13 +197,14 @@ The legacy local SSE mode is intentionally removed. It generates synthetic state
 
 - Remove the unused `useMiddlewareStore` implementation.
 - Keep only values and exports consumed by the application.
-- Make the default option values module-private.
+- Delete the unused exported store defaults, and place the shared UI default options in a dedicated non-component module so React Refresh component boundaries remain valid.
 - Preserve middleware guidance as executable or displayed documentation without maintaining an unused store instance.
 
 ## Production-Code Cleanup
 
 - Remove the duplicate default export from `packages/zusound/src/middleware.ts`.
 - Define and export the singleton `zusound` from `packages/zusound/src/index.ts` by calling `createZusound()`, update internal tests to use the public entry, and delete `packages/zusound/src/middleware.ts`.
+- Add a test/config TypeScript project so package typechecking covers maintained tests and tool configuration, then remove the obsolete Zustand default-import compatibility shims that conflict with the final Zustand 5 development types. Tarball consumers continue to prove Zustand 4 runtime compatibility.
 - Do not remove exported public types or runtime symbols based solely on internal usage scans; consumers are outside the repository.
 - Use Knip with explicit workspace, script, package-entry, and demo-entry configuration so intentional public exports and maintenance scripts are not false positives.
 - The final configured Knip run must have no unexplained unused files, dependencies, or exports.
@@ -240,6 +250,8 @@ Delete after preserving any still-current information in the retained documents:
 - `docs/SKILL_ROLLOUT.md`
 - `docs/SKILL_ARTIFACT_POLICY.md`
 - `docs/SKILL_MIGRATION_REHEARSAL.md`
+- `docs/superpowers/plans/2026-08-01-dependency-and-project-cleanup.md`, whose Node 18, pnpm 10, dual-demo, and cleanup-subsystem instructions are superseded by this design
+- `docs/superpowers/specs/2026-08-01-dependency-and-project-cleanup-design.md`, whose compatibility and retention decisions are superseded by this design
 - Legacy `demo/API_DOCS_STRATEGY.md`
 - Empty `docs/assets/.gitkeep`
 - `.env.example`, because there are no repository runtime environment variables and release authentication is documented separately
@@ -251,7 +263,7 @@ Remove the broken GIF block from the root README without adding a replacement bi
 Add one deterministic `docs:check` command that:
 
 - Runs README synchronization checking.
-- Verifies tracked local Markdown and HTML file references exist.
+- Verifies file-relative and repository-root local references in tracked and newly created nonignored Markdown/MDX files, while ignoring fenced and inline code examples.
 - Avoids live external-link requests so CI is not network-flaky.
 
 ## CI and Dependency Automation
@@ -259,7 +271,7 @@ Add one deterministic `docs:check` command that:
 ### CI quality jobs
 
 - Full quality matrix: Node 22.22 minimum and Node 24 LTS.
-- Required checks: install, docs check, skill validation, Knip, lint, typecheck, test coverage, library build, and demo build.
+- Required checks: install, explicit all-severity audit assertion, deterministic outdated-dependency allowlist, docs check, skill validation, Knip, formatting, lint, typecheck, test coverage, library build, demo build, package validation, and automation schema validation.
 - Remove the Node 18 job and custom cleanup regression.
 - Keep the Zustand compatibility matrix, updating latest 4.x and 5.x versions while retaining oldest supported 4.0.0.
 
@@ -270,8 +282,8 @@ Validate the built tarball, not only the source workspace:
 - `npm pack` or `pnpm pack` from `packages/zusound`.
 - Expected-file assertion for package metadata, license, README, declarations, ESM, CJS, and intended source maps.
 - Publint validation.
-- `@arethetypeswrong/cli` package-exports and declaration validation.
-- Temporary consumer fixtures using the tarball with supported Zustand 4 and 5 versions.
+- `@arethetypeswrong/cli` package-exports and declaration validation, including separate ESM and CommonJS declaration conditions.
+- Temporary ESM, CommonJS, and strict TypeScript consumer fixtures using the tarball with supported Zustand 4 and 5 versions.
 
 ### Demo deployment
 
@@ -279,6 +291,7 @@ Validate the built tarball, not only the source workspace:
 - Upload `demo/dist` to GitHub Pages.
 - Ensure generated asset URLs work under the repository Pages path.
 - Remove all references to legacy staged output and SSE modes.
+- Remove the obsolete `examples/**` deployment trigger and validate every workflow plus `.github/dependabot.yml` with version-pinned local validator CLIs.
 
 ### Automated updates
 
@@ -287,11 +300,12 @@ Add `.github/dependabot.yml` with grouped weekly updates for:
 - npm/pnpm dependencies across the workspace.
 - GitHub Actions.
 
-Group coherent tool families where possible so Vite/plugin, Vitest/coverage, ESLint, and TypeScript ESLint changes arrive together.
+Group coherent tool families where possible so Vite/plugin, Vitest/coverage, ESLint, TypeScript ESLint, Changesets, and automation-validator changes arrive together.
+Ignore only TypeScript and `@types/node` major updates while the documented TypeScript ESLint and Node 22/24 compatibility constraints remain active.
 
 ## Failure Handling and Rollback
 
-- Commit each dependency family separately after its narrow gate passes.
+- Validate dependency families through their narrow gates, then commit the complete manifest and lockfile graph atomically after the zero-audit and Node 22/24 checks pass. Do not retain partially upgraded or vulnerable lockfile commits.
 - Keep demo consolidation, production dead-code cleanup, documentation consolidation, and CI automation in separate reversible commits.
 - Do not delete the legacy demo until the React demo builds with the package tarball or workspace package, works under a Pages-safe base path, and retains the required behavior listed above.
 - If a latest stable dependency fails due to a documented engine or peer conflict, use the highest compatible stable version and record the exact constraint in `CONTRIBUTING.md`.
@@ -303,7 +317,7 @@ Group coherent tool families where possible so Vite/plugin, Vitest/coverage, ESL
 The modernization is complete only when all of the following are observed from the final tree:
 
 1. A frozen pnpm 11 install succeeds on Node 22.22 minimum and Node 24 LTS.
-2. `pnpm audit --json` reports zero info, low, moderate, high, and critical vulnerabilities.
+2. `pnpm security:check` parses pnpm audit JSON and asserts zero info, low, moderate, high, and critical vulnerabilities plus zero advisories.
 3. `pnpm docs:check` passes with no README drift or broken tracked local references.
 4. Skills validation passes for all four retained skills.
 5. Configured Knip reports no unexplained unused files, dependencies, or exports.
@@ -316,17 +330,19 @@ The modernization is complete only when all of the following are observed from t
 12. The packed package contains only intended distributable files and passes Publint and package-exports/type validation.
 13. Tarball consumer checks pass with oldest supported Zustand 4, latest Zustand 4, and latest Zustand 5.
 14. The GitHub Pages demo loads with no missing assets or console errors and its required interaction paths work.
-15. `pnpm outdated --recursive` reports only explicitly documented compatibility constraints: TypeScript 5.9, Node 24 typings, and the mature patched esbuild 0.28.1 override while pnpm's one-day release-age policy excludes a newer release.
-16. The final Git diff contains no generated build outputs, temporary package tarballs, or unrelated changes.
-17. The public API, package version, runtime behavior, and Zustand peer range remain unchanged.
+15. `pnpm deps:check` asserts that TypeScript 5.9 and Node 24 typings are the only direct outdated entries and that neither has a compatible patch/minor update pending. `pnpm why esbuild` and `pnpm why nanoid` separately confirm the exact patched overrides.
+16. `pnpm automation:check` schema-validates every GitHub Actions workflow and the Dependabot configuration.
+17. The final Git diff contains no generated build outputs, temporary package tarballs, or unrelated changes.
+18. The public API, package version, runtime behavior, and Zustand peer range remain unchanged.
 
 ## Implementation Order
 
-1. Establish the clean baseline and add regression checks for accepted cleanup boundaries.
-2. Remove unused dependencies and superseded maintenance tooling.
-3. Upgrade Node, pnpm, and dependency families with narrow verification after each family.
+1. Create an isolated worktree and record dependency, lint, cleanup, test, and build baselines.
+2. Upgrade Node, pnpm, and the coherent dependency graph while removing the verified unused direct dependencies. Run zero-audit and Node 22/24 gates before committing the fresh lockfile.
+3. Remove superseded maintenance tooling, expand lint and test/config type coverage, and resolve only the observed findings.
 4. Consolidate and validate the demo before deleting legacy files.
 5. Remove internal dead code without changing public exports.
 6. Consolidate documentation and add the local-reference gate.
-7. Update CI, package validation, deployment, and Dependabot automation.
-8. Run the complete clean-install and end-user verification matrix.
+7. Add Knip, formatting, tarball-content, and package-export/type validation.
+8. Update CI, release, deployment, and Dependabot automation.
+9. Run the complete clean-install and end-user verification matrix.
