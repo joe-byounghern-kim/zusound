@@ -1,0 +1,22 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "treatConfigHintsAsErrors": true,
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/*.mjs"],
+      "project": ["scripts/*.mjs"],
+      "ignoreDependencies": [
+        "@action-validator/cli",
+        "@action-validator/core",
+        "@bugron/validate-dependabot-yaml"
+      ]
+    },
+    "packages/zusound": {
+      "project": ["src/**/*.ts", "__tests__/**/*.ts", "*.config.ts"]
+    },
+    "demo": {
+      "project": ["src/**/*.{ts,tsx}"],
+      "includeEntryExports": true
+    }
+  }
+}

@@ -46,11 +46,13 @@ body {
   background:
     radial-gradient(ellipse 60% 50% at 8% 6%, rgba(118, 167, 255, 0.13), transparent 60%),
     radial-gradient(ellipse 50% 40% at 92% 3%, rgba(119, 247, 207, 0.11), transparent 55%),
-    radial-gradient(ellipse 45% 45% at 76% 86%, rgba(246, 173, 118, 0.10), transparent 50%);
+    radial-gradient(ellipse 45% 45% at 76% 86%, rgba(246, 173, 118, 0.1), transparent 50%);
 }
 
 /* ─── Typography ─── */
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   font-family: 'Sora', 'Manrope', system-ui, sans-serif;
   letter-spacing: -0.02em;
   line-height: 1.12;
@@ -307,7 +309,9 @@ a:focus-visible {
   font-size: 0.82rem;
   background: transparent;
   color: var(--ink-soft);
-  transition: background 100ms ease, color 100ms ease;
+  transition:
+    background 100ms ease,
+    color 100ms ease;
 }
 
 .mode-tabs button[aria-pressed='true'] {
@@ -497,12 +501,25 @@ a:focus-visible {
   color: #5c6898;
 }
 
-.tok-kw { color: #c792ea; }
-.tok-str { color: var(--accent); }
-.tok-comment { color: #5c6898; font-style: italic; }
-.tok-type { color: var(--accent-warm); }
-.tok-num { color: #f78c6c; }
-.tok-punct { color: #89ddff; }
+.tok-kw {
+  color: #c792ea;
+}
+.tok-str {
+  color: var(--accent);
+}
+.tok-comment {
+  color: #5c6898;
+  font-style: italic;
+}
+.tok-type {
+  color: var(--accent-warm);
+}
+.tok-num {
+  color: #f78c6c;
+}
+.tok-punct {
+  color: #89ddff;
+}
 
 /* ─── API Section ─── */
 .api-section {
@@ -612,8 +629,12 @@ a:focus-visible {
 
 /* ─── Animations ─── */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes sceneEnter {
