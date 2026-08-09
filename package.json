@@ -29,9 +29,10 @@
     "demo:react:typecheck": "pnpm -C examples typecheck",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml}\"",
     "lint": "turbo run lint",
-    "prepare": "husky install",
+    "prepare": "husky",
     "readme:check": "node scripts/sync-readme.mjs --check",
     "readme:sync": "node scripts/sync-readme.mjs",
+    "security:check": "node scripts/check-audit.mjs",
     "skills:bridge": "node scripts/build-skill-bridge.mjs",
     "skills:check": "node scripts/check-skills.mjs",
     "skills:validate": "pnpm skills:check",
@@ -47,36 +48,32 @@
     "version-packages": "changeset version"
   },
   "devDependencies": {
+    "@action-validator/cli": "^0.6.0",
+    "@action-validator/core": "^0.6.0",
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@bugron/validate-dependabot-yaml": "^0.3.3",
     "@changesets/changelog-github": "^0.7.0",
-    "@changesets/cli": "^2.27.1",
-    "@eslint/js": "^9.39.5",
-    "@types/node": "^20.11.0",
-    "@typescript-eslint/eslint-plugin": "^8.65.0",
-    "@typescript-eslint/parser": "^8.65.0",
-    "eslint": "^9.39.5",
+    "@changesets/cli": "^2.31.1",
+    "@eslint/js": "^10.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.66.0",
+    "@typescript-eslint/parser": "^8.66.0",
+    "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
-    "globals": "^16.5.0",
-    "husky": "^8.0.3",
-    "lint-staged": "^15.2.0",
-    "prettier": "^3.2.4",
-    "turbo": "^2.9.14",
-    "typescript": "^5.3.3",
-    "zustand": "^4.4.7"
+    "globals": "^17.9.0",
+    "husky": "^9.1.7",
+    "knip": "^6.32.0",
+    "lint-staged": "^17.3.0",
+    "prettier": "^3.9.6",
+    "publint": "^0.3.23",
+    "turbo": "^2.10.9",
+    "typescript": "^5.9.3",
+    "zustand": "^5.0.14"
   },
-  "packageManager": "pnpm@10.34.5",
+  "packageManager": "pnpm@11.20.0",
   "engines": {
-    "node": ">=20.19.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ],
-    "overrides": {
-      "esbuild": "0.28.1"
-    }
+    "node": ">=22.22.2"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
