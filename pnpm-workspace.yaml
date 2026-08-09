@@ -5,6 +5,7 @@ packages:
 overrides:
   esbuild: 0.28.1
   nanoid: 3.3.18
+  '@arethetypeswrong/core@0.18.5>typescript': 5.9.3
 
 allowBuilds:
   esbuild: true
