@@ -630,11 +630,11 @@ a:focus-visible {
 /* ─── Responsive: 980px ─── */
 @media (max-width: 980px) {
   .demo-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .api-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .audio-gate {

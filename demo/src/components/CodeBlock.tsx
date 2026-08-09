@@ -10,10 +10,7 @@ interface CodeBlockProps {
  * SAFETY: The `code` prop must be a hardcoded string literal, never user input.
  */
 function highlight(raw: string): string {
-  const escaped = raw
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+  const escaped = raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
   // Single-pass tokenizer to avoid nested span issues
   const tokens: { start: number; end: number; cls: string }[] = []
@@ -32,7 +29,7 @@ function highlight(raw: string): string {
 
   // Keywords
   for (const m of escaped.matchAll(
-    /\b(import|export|from|const|let|type|interface|return|if|else|true|false|undefined|null|void|async|await|function|new)\b/g,
+    /\b(import|export|from|const|let|type|interface|return|if|else|true|false|undefined|null|void|async|await|function|new)\b/g
   )) {
     if (!tokens.some((t) => m.index! >= t.start && m.index! < t.end)) {
       tokens.push({ start: m.index!, end: m.index! + m[0].length, cls: 'tok-kw' })

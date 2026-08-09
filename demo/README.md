@@ -1,62 +1,53 @@
-# Zusound Live Demo
+# React TypeScript Demo
 
-A standalone demo for exercising `zusound` in local dev mode and GitHub Pages hosted mode.
+This directory is a strict TypeScript compatibility demo for `zusound` using React + Vite.
 
-## Local dev mode (real SSE)
+## Why this demo exists
 
-From the repository root:
+- Uses a major frontend framework stack used by many TypeScript users.
+- Validates `zusound` + Zustand integration under strict type checking.
+- Helps catch integration regressions before users see type errors in their apps.
+
+## Run
+
+From repository root:
 
 ```bash
 pnpm install
-pnpm build
-node demo/server.js
+pnpm demo:react:typecheck
+pnpm demo:react:dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:5173`.
 
-- Mode badge shows `Local SSE`.
-- Demo connects to `/events` from `demo/server.js`.
-
-## Hosted/static mode (simulation)
-
-From the repository root:
+## Build check
 
 ```bash
-pnpm demo:stage
-pnpm demo:verify
-pnpm demo:preview
+pnpm demo:react:typecheck
+pnpm demo:react:build
 ```
 
-Open `http://localhost:4173`.
+## Key patterns
 
-- Mode badge shows `Hosted simulation`.
-- No `/events` connection is attempted.
-- Deterministic mock events are generated in the client so logs and state updates still move.
+The demo showcases two primary integration strategies:
 
-## Staging output
+**1. Middleware Wrap (Traditional)**
 
-`pnpm demo:stage` creates `demo/dist-site` with:
+```ts
+export const useStore = create<StoreType>()(zusound((set) => ({ ... })))
+```
 
-- `index.html`, `app.js`, `style.css`
-- `lib/*` (from `packages/zusound/dist`)
-- `vendor/zustand/*` (from `node_modules/zustand/esm`)
+This mirrors current guidance for strict TypeScript middleware integration.
 
-`pnpm demo:verify` fails fast if required files/dirs/import-map references are missing.
+**2. Explicit Subscriber Attachment**
 
-## GitHub Pages deployment
+```ts
+export const useStore = create<StoreType>()((set) => ({ ... }))
 
-- Deployment is automated by `.github/workflows/deploy-demo.yml`.
-- Pushes to `main` that touch demo/package/workflow inputs trigger build, stage, verify, and deploy.
-- Manual redeploy is available with `workflow_dispatch`.
+// Somewhere in a component or effect:
+const zs = createZusound({...options})
+const unsubscribe = useStore.subscribe(zs)
+```
 
-## Troubleshooting
-
-- Missing staged assets: run `pnpm build` then `pnpm demo:stage` again.
-- JS/CSS import failures under Pages: run `pnpm demo:verify` and confirm import map references are relative (`./lib`, `./vendor`).
-- No sound: click `Enable Audio` first; browsers require user gesture before playback.
-
-## Related docs
-
-- Root overview: `../README.md`
-- Development workflow: `../DEVELOPMENT.md`
-- Runbook and rollback guidance: `../docs/RUNBOOK.md`
+This is a lighter-touch approach for adding/removing audio dynamically without wrapping the
+entire store definition. Use a fresh `createZusound(...)` instance for each attachment.

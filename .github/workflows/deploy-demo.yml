@@ -6,11 +6,10 @@ on:
     paths:
       - '.github/workflows/deploy-demo.yml'
       - 'demo/**'
-      - 'examples/**'
       - 'packages/zusound/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
-      - 'turbo.json'
+      - 'pnpm-workspace.yaml'
   workflow_dispatch:
 
 permissions:
@@ -43,19 +42,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Typecheck (including React TS demo)
-        run: pnpm typecheck
+      - name: Build library
+        run: pnpm -C packages/zusound build
 
-      - name: Build packages
-        run: pnpm build
-
-      - name: Stage demo
-        run: pnpm demo:stage && pnpm demo:verify
+      - name: Validate and build demo
+        run: |
+          pnpm -C demo typecheck
+          pnpm -C demo build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
-          path: ./demo/dist-site
+          path: ./demo/dist
 
   deploy:
     environment:

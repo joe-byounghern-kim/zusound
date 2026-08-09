@@ -46,17 +46,6 @@ jobs:
           RELEASE_RANGE: origin/${{ github.base_ref }}..HEAD
         run: pnpm release:auto:dry-run
 
-      - name: Report demo package changesets
-        run: |
-          shopt -s nullglob
-          files=(.changeset/*.md)
-          if [ ${#files[@]} -eq 0 ]; then
-            exit 0
-          fi
-          if grep -R "zusound-react-ts-demo" "${files[@]}"; then
-            echo "Demo package changesets detected; publish flow ignores this package via .changeset/config.json."
-          fi
-
       - name: Build
         run: pnpm build
 

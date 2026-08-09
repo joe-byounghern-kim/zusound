@@ -18,7 +18,9 @@ export function AudioGate({ enabled, onEnable }: AudioGateProps) {
         <button type="button" className="btn--primary" onClick={onEnable}>
           Enable Audio
         </button>
-        <span className="status-pill" aria-live="polite">Audio locked</span>
+        <span className="status-pill" aria-live="polite">
+          Audio locked
+        </span>
       </div>
     </div>
   )

@@ -113,8 +113,16 @@ const OPTIONS_DATA = [
 ]
 
 const AESTHETIC_DATA = [
-  { name: 'pleasantness', range: '0\u20131', desc: 'Consonance: 0 = harsh tritone, 1 = pure unison' },
-  { name: 'brightness', range: '0\u20131', desc: 'Harmonic richness: 0 = sine-like, 1 = sawtooth-like' },
+  {
+    name: 'pleasantness',
+    range: '0\u20131',
+    desc: 'Consonance: 0 = harsh tritone, 1 = pure unison',
+  },
+  {
+    name: 'brightness',
+    range: '0\u20131',
+    desc: 'Harmonic richness: 0 = sine-like, 1 = sawtooth-like',
+  },
   { name: 'arousal', range: '0\u20131', desc: 'ADSR speed: 0 = slow fade, 1 = percussive snap' },
   { name: 'valence', range: '0\u20131', desc: 'Sustain: 0 = brief, 1 = full sustain' },
   {
@@ -219,15 +227,20 @@ export function ApiDocs() {
       <div className="api-subsection">
         <h3>Change Object</h3>
         <p style={{ color: 'var(--ink-soft)', margin: '8px 0 16px', fontSize: '0.9rem' }}>
-          Every state change produces a <code style={{
-            fontFamily: "'IBM Plex Mono', monospace",
-            background: 'rgba(8,10,18,0.7)',
-            border: '1px solid #222850',
-            borderRadius: 5,
-            padding: '2px 6px',
-            fontSize: '0.82rem',
-          }}>Change</code> descriptor
-          with path, operation type, and value metadata.
+          Every state change produces a{' '}
+          <code
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              background: 'rgba(8,10,18,0.7)',
+              border: '1px solid #222850',
+              borderRadius: 5,
+              padding: '2px 6px',
+              fontSize: '0.82rem',
+            }}
+          >
+            Change
+          </code>{' '}
+          descriptor with path, operation type, and value metadata.
         </p>
         <CodeBlock code={CHANGE_EXAMPLE} />
       </div>

@@ -8,8 +8,8 @@ export function Hero() {
       <p className="eyebrow">Audio debugging for Zustand</p>
       <h1>Hear State Changes Before Logs Catch Up</h1>
       <p className="hero-sub">
-        Zusound turns Zustand updates into instant audio cues — hear adds, removes, and updates
-        as distinct tones. Catch infinite loops and race conditions the moment they happen.
+        Zusound turns Zustand updates into instant audio cues — hear adds, removes, and updates as
+        distinct tones. Catch infinite loops and race conditions the moment they happen.
       </p>
       <div className="hero-actions">
         <code className="install-cmd">npm install zusound</code>

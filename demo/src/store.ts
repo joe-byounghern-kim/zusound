@@ -1,4 +1,4 @@
-import { zusound, createZusound, type Change, type ZusoundOptions } from 'zusound'
+import { createZusound, type ZusoundOptions } from 'zusound'
 import { create } from 'zustand'
 
 /* ─── State Shape ─── */
@@ -48,7 +48,7 @@ const STATUS_CYCLE: PlaygroundState['status'][] = ['idle', 'loading', 'success',
 /* ─── State Creator ─── */
 
 function createPlayground(
-  set: (fn: Partial<PlaygroundState> | ((s: PlaygroundState) => Partial<PlaygroundState>)) => void,
+  set: (fn: Partial<PlaygroundState> | ((s: PlaygroundState) => Partial<PlaygroundState>)) => void
 ): PlaygroundState {
   return {
     ...INITIAL,
@@ -68,41 +68,13 @@ function createPlayground(
   }
 }
 
-/* ─── Default Options ─── */
-
-export const defaultOptions: ZusoundOptions = {
-  enabled: true,
-  volume: 0.3,
-  debounceMs: 50,
-  aesthetics: {
-    pleasantness: 0.7,
-    brightness: 0.6,
-    arousal: 0.6,
-    valence: 0.6,
-    simultaneity: 1,
-    baseMidi: 69,
-  },
-  mapChangeToAesthetics: (change: Change) => {
-    if (change.operation === 'add') return { pleasantness: 0.88, valence: 0.82 }
-    if (change.operation === 'remove') return { pleasantness: 0.34, arousal: 0.72 }
-    return { pleasantness: 0.64 }
-  },
-}
-
 /* ─── Stores ─── */
-
-export const useMiddlewareStore = create<PlaygroundState>()(
-  zusound(
-    (set) => createPlayground(set),
-    defaultOptions,
-  ),
-)
 
 export const useSubscriberStore = create<PlaygroundState>()((set) => createPlayground(set))
 
 /* ─── Subscriber Binding ─── */
 
-export function bindSubscriberZusound(options: ZusoundOptions = defaultOptions): () => void {
+export function bindSubscriberZusound(options: ZusoundOptions): () => void {
   const instance = createZusound(options)
   const unsubscribe = useSubscriberStore.subscribe(instance)
   return () => {

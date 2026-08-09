@@ -11,7 +11,7 @@
   "type": "module",
   "workspaces": [
     "packages/zusound",
-    "examples"
+    "demo"
   ],
   "scripts": {
     "build": "turbo run build",
@@ -19,13 +19,10 @@
     "changeset": "changeset",
     "clean": "turbo run clean && rm -rf node_modules",
     "dev": "turbo run dev",
-    "demo:stage": "pnpm build && pnpm -C demo run stage",
-    "demo:stage:clean": "pnpm -C demo run clean-stage",
-    "demo:verify": "pnpm -C demo run check-stage",
-    "demo:preview": "python3 -m http.server 4173 --directory demo/dist-site",
-    "demo:react:dev": "pnpm -C examples dev",
-    "demo:react:build": "pnpm -C examples build",
-    "demo:react:typecheck": "pnpm -C examples typecheck",
+    "demo:build": "pnpm -C packages/zusound build && pnpm -C demo build",
+    "demo:dev": "pnpm -C packages/zusound build && pnpm -C demo dev",
+    "demo:preview": "pnpm demo:build && pnpm -C demo preview",
+    "demo:typecheck": "pnpm -C packages/zusound build && pnpm -C demo typecheck",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml}\"",
     "lint": "eslint eslint.config.js scripts --max-warnings=0 && turbo run lint",
     "prepare": "husky",
@@ -66,8 +63,7 @@
     "prettier": "^3.9.6",
     "publint": "^0.3.23",
     "turbo": "^2.10.9",
-    "typescript": "^5.9.3",
-    "zustand": "^5.0.14"
+    "typescript": "^5.9.3"
   },
   "packageManager": "pnpm@11.20.0",
   "engines": {

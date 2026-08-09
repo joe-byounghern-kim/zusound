@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { AudioGate } from '../components/AudioGate'
 import { ActionLog, type LogEntry } from '../components/ActionLog'
 import { AestheticPanel } from '../components/AestheticPanel'
@@ -125,13 +126,15 @@ export function Demo() {
   }, [])
 
   // Live state
-  const liveState = useSubscriberStore((state) => ({
-    count: state.count,
-    toggled: state.toggled,
-    status: state.status,
-    items: state.items,
-    user: state.user,
-  }))
+  const liveState = useSubscriberStore(
+    useShallow((state) => ({
+      count: state.count,
+      toggled: state.toggled,
+      status: state.status,
+      items: state.items,
+      user: state.user,
+    }))
+  )
 
   return (
     <section id="playground" className="demo-section" aria-labelledby="playground-heading">
