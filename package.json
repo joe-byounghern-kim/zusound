@@ -33,6 +33,7 @@
     "docs:check": "pnpm readme:check && node scripts/check-docs.mjs",
     "deps:check": "node scripts/check-outdated.mjs",
     "package:check": "node scripts/check-package.mjs && publint run packages/zusound --strict --level warning && attw --pack packages/zusound",
+    "automation:check": "node scripts/check-automation.mjs",
     "security:check": "node scripts/check-audit.mjs",
     "skills:bridge": "node scripts/build-skill-bridge.mjs",
     "skills:check": "node scripts/check-skills.mjs",

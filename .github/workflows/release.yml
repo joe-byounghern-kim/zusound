@@ -34,24 +34,19 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
+        uses: pnpm/action-setup@ff378ebe6b225b0680b81c1ad4498ae0d1d3a5e3 # v6.0.10
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version: 24.19.0
           cache: pnpm
           registry-url: https://registry.npmjs.org
-
-      - name: Upgrade npm for trusted publishing
-        run: |
-          npm install -g npm@^11.5.1
-          npm --version
 
       # ── Resolve & validate tag ─────────────────────────────────────────
       - name: Resolve release tag
@@ -141,23 +136,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: README sync check
-        run: pnpm readme:check
+      - name: Verify repository
+        run: pnpm verify
 
-      - name: Skills validation
-        run: pnpm skills:validate
+      - name: Validate automation schemas
+        run: pnpm automation:check
 
-      - name: Lint
-        run: pnpm lint
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Build
-        run: pnpm build
-
-      - name: Test coverage
-        run: pnpm test:coverage
+      - name: Security audit
+        run: pnpm security:check
 
       # ── Publish ────────────────────────────────────────────────────────
       - name: Validate token secret

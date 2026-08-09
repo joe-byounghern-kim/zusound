@@ -5,11 +5,8 @@
     ".": {
       "entry": ["scripts/*.mjs"],
       "project": ["scripts/*.mjs"],
-      "ignoreDependencies": [
-        "@action-validator/cli",
-        "@action-validator/core",
-        "@bugron/validate-dependabot-yaml"
-      ]
+      "ignoreBinaries": ["validate-dependabot-yaml"],
+      "ignoreDependencies": ["@bugron/validate-dependabot-yaml"]
     },
     "packages/zusound": {
       "project": ["src/**/*.ts", "__tests__/**/*.ts", "*.config.ts"]
