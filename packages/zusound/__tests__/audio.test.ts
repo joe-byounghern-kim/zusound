@@ -25,7 +25,6 @@ type OscillatorMock = {
 describe('audio playback', () => {
   beforeEach(() => {
     cleanupAudio()
-    ;(globalThis as any).window ??= globalThis
   })
 
   function setupMockAudioContext() {

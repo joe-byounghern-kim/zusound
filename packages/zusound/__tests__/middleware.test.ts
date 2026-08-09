@@ -4,10 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import defaultCreateStore, { createStore as namedCreateStore, type StoreApi } from 'zustand/vanilla'
-
-// Zustand < 4.3 exported `createStore` as default from 'zustand/vanilla'
-const createStore = namedCreateStore ?? defaultCreateStore
+import { createStore, type StoreApi } from 'zustand/vanilla'
 import { zusound } from '../src/middleware'
 import { attachZusound, createZusound } from '../src/adapter'
 import { cleanupAudio } from '../src/audio'
@@ -35,7 +32,13 @@ type CounterState = {
   count: number
   increment: () => void
 }
-  ; (globalThis as any).window ??= globalThis
+
+type CounterStoreWithCleanup = StoreApi<CounterState> & {
+  zusoundCleanup: () => void
+}
+
+const withCleanup = (store: StoreApi<CounterState>): CounterStoreWithCleanup =>
+  store as unknown as CounterStoreWithCleanup
 
 // Mock Web Audio API
 const mockAudioContext = {
@@ -101,7 +104,7 @@ describe('Zusound Middleware', () => {
     const store = createStore<CounterState>(
       zusound(() => ({
         count: 0,
-        increment: () => { },
+        increment: () => {},
       }))
     )
 
@@ -114,7 +117,7 @@ describe('Zusound Middleware', () => {
       zusound(
         () => ({
           count: 0,
-          increment: () => { },
+          increment: () => {},
         }),
         { enabled: true }
       )
@@ -167,7 +170,7 @@ describe('Zusound Middleware', () => {
     )
 
     // Should have cleanup function attached
-    expect(typeof (store as any).zusoundCleanup).toBe('function')
+    expect(typeof withCleanup(store).zusoundCleanup).toBe('function')
   })
 
   it('should report subscription attach failures through onError and return safe cleanup', () => {
@@ -192,10 +195,7 @@ describe('Zusound Middleware', () => {
       )
 
       expect(warnSpy).toHaveBeenCalledTimes(1)
-      expect(warnSpy).toHaveBeenCalledWith(
-        'Zusound: Failed to attach subscription',
-        subscribeError
-      )
+      expect(warnSpy).toHaveBeenCalledWith('Zusound: Failed to attach subscription', subscribeError)
       expect(onError).toHaveBeenCalledTimes(1)
       expect(onError.mock.calls[0]?.[0]).toBe(subscribeError)
       expect(onError.mock.calls[0]?.[1]).toMatchObject({ stage: 'state-change-processing' })
@@ -227,7 +227,7 @@ describe('Zusound Middleware', () => {
     )
 
     store.getState().increment()
-      ; (store as any).zusoundCleanup()
+    withCleanup(store).zusoundCleanup()
 
     expect(mockAudioContext.close).toHaveBeenCalledTimes(1)
   })
@@ -294,19 +294,15 @@ describe('Zusound Middleware', () => {
     )
 
     store.getState().increment()
-      ; (store as any).zusoundCleanup()
+    withCleanup(store).zusoundCleanup()
 
     await sleep(170)
 
     expect(window.AudioContext).not.toHaveBeenCalled()
-    expect(() => (store as any).zusoundCleanup()).not.toThrow()
+    expect(() => withCleanup(store).zusoundCleanup()).not.toThrow()
   })
 
   it('suppresses queued playback after cleanup while another store keeps the audio engine alive', async () => {
-    type CounterStoreWithCleanup = StoreApi<CounterState> & {
-      zusoundCleanup: () => void
-    }
-
     const createCounterStore = (): CounterStoreWithCleanup =>
       createStore<CounterState>(
         zusound(
@@ -332,10 +328,6 @@ describe('Zusound Middleware', () => {
   })
 
   it('keeps the shared audio engine alive until all stores are cleaned up', () => {
-    type CounterStoreWithCleanup = StoreApi<CounterState> & {
-      zusoundCleanup: () => void
-    }
-
     const createCounterStore = (): CounterStoreWithCleanup =>
       createStore<CounterState>(
         zusound(
@@ -483,10 +475,6 @@ describe('Zusound Middleware', () => {
     })
 
     it('keeps subscriber audio alive when middleware cleanup runs', () => {
-      type CounterStoreWithCleanup = StoreApi<CounterState> & {
-        zusoundCleanup: () => void
-      }
-
       const middlewareStore = createStore<CounterState>(
         zusound(
           (set) => ({

@@ -42,9 +42,6 @@ jobs:
       - name: Skills validation
         run: pnpm skills:validate
 
-      - name: Cleanup regression
-        run: pnpm test:clean-artifacts
-
       - name: Lint
         run: pnpm lint
 

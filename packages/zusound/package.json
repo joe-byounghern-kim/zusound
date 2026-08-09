@@ -38,11 +38,11 @@
     "build:watch": "tsup --watch",
     "clean": "rm -rf dist coverage",
     "dev": "tsup --watch",
-    "lint": "eslint src",
+    "lint": "eslint src __tests__ tsup.config.ts vitest.config.ts --max-warnings=0",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
   },
   "peerDependencies": {
     "zustand": ">=4.0.0 <6.0.0"

@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { AudioGate } from '../components/AudioGate'
 import { ActionLog, type LogEntry } from '../components/ActionLog'
-import { AestheticPanel, defaultDemoOptions, type DemoOptions } from '../components/AestheticPanel'
+import { AestheticPanel } from '../components/AestheticPanel'
 import { CodeBlock } from '../components/CodeBlock'
+import { defaultDemoOptions, type DemoOptions } from '../demoOptions'
 import { useSubscriberStore, bindSubscriberZusound, DATA_KEYS } from '../store'
 
 function timeStr(): string {
