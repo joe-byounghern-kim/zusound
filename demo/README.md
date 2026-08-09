@@ -1,53 +1,20 @@
-# React TypeScript Demo
+# ZuSound Demo
 
-This directory is a strict TypeScript compatibility demo for `zusound` using React + Vite.
+This private React, TypeScript, and Vite workspace is the integration demo and GitHub Pages site for ZuSound.
 
-## Why this demo exists
-
-- Uses a major frontend framework stack used by many TypeScript users.
-- Validates `zusound` + Zustand integration under strict type checking.
-- Helps catch integration regressions before users see type errors in their apps.
-
-## Run
-
-From repository root:
+## Run locally
 
 ```bash
-pnpm install
-pnpm demo:typecheck
 pnpm demo:dev
 ```
 
-Open `http://localhost:5173`.
+Open `http://localhost:5173` and enable audio through the page's user-gesture control.
 
-## Build check
+## Validate
 
 ```bash
 pnpm demo:typecheck
 pnpm demo:build
 ```
 
-## Key patterns
-
-The demo showcases two primary integration strategies:
-
-**1. Middleware Wrap (Traditional)**
-
-```ts
-export const useStore = create<StoreType>()(zusound((set) => ({ ... })))
-```
-
-This mirrors current guidance for strict TypeScript middleware integration.
-
-**2. Explicit Subscriber Attachment**
-
-```ts
-export const useStore = create<StoreType>()((set) => ({ ... }))
-
-// Somewhere in a component or effect:
-const zs = createZusound({...options})
-const unsubscribe = useStore.subscribe(zs)
-```
-
-This is a lighter-touch approach for adding/removing audio dynamically without wrapping the
-entire store definition. Use a fresh `createZusound(...)` instance for each attachment.
+The demo covers state-change triggers, aesthetic controls, rapid updates, middleware/subscriber guidance, and the public options reference. Vite uses relative asset paths so `demo/dist` can be deployed under the repository's GitHub Pages subpath.

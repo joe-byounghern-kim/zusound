@@ -14,12 +14,6 @@ Hear your state changes. Debug faster.
 - Lightweight diffing and lazy `AudioContext`
 - Optional aesthetics mapping for timbre, pleasantness, and timing behavior
 
-<p align="center">
-  <a href="https://joe-byounghern-kim.github.io/zusound/">
-    <img src="docs/assets/demo-preview.gif" alt="Zusound Signal Lab Demo" width="720" />
-  </a>
-</p>
-
 > **[Try the interactive Signal Lab →](https://joe-byounghern-kim.github.io/zusound/)**
 
 ## Why Zusound
@@ -177,6 +171,7 @@ const useStore = create(
 - Browsers may keep `AudioContext` suspended until user interaction.
 - `performanceMode` is recommended for low-power or high-frequency update scenarios.
 - Use `onError` if you need telemetry for non-fatal audio/debugging failures.
+
 <!-- README_SYNC:SECTION_END:production-notes -->
 
 <!-- README_SYNC:SECTION_START:what-youll-hear -->
@@ -187,31 +182,28 @@ const useStore = create(
 - Booleans: short click-like cues
 - Strings: brighter/longer character
 - Objects/arrays: more layered motion
+
 <!-- README_SYNC:SECTION_END:what-youll-hear -->
 
 ## Launch Checklist
 
-Before tagging a release:
+Before opening a pull request or tagging a release:
 
 ```bash
-pnpm lint
-pnpm typecheck
-pnpm test:coverage
-pnpm build
+pnpm verify
 ```
 
-Release gate setup (GitHub environment + npm trusted publisher) is documented in `docs/RELEASE_GATES.md`.
+See [Releasing ZuSound](docs/RELEASING.md) for publishing prerequisites and rollback.
 
 ## Docs Map
 
-- Quick start: `QUICK_START.md`
-- Development workflow: `DEVELOPMENT.md`
-- Package API and recipes: `packages/zusound/README.md`
-- Contributor workflow: `docs/CONTRIB.md`
-- Operations runbook: `docs/RUNBOOK.md`
-- Release gates: `docs/RELEASE_GATES.md`
-- Security policy: `SECURITY.md`
-- Technical requirements baseline: `REQUIREMENTS.MD`
+- [Contributing](CONTRIBUTING.md)
+- [Package API and recipes](packages/zusound/README.md)
+- [Demo development](demo/README.md)
+- [Release process](docs/RELEASING.md)
+- [Agent skills](.agents/README.md)
+- [Security policy](SECURITY.md)
+- [Code of conduct](CODE_OF_CONDUCT.md)
 
 ## User-Facing Skill Pack
 
@@ -229,33 +221,19 @@ pnpm skills:validate
 pnpm skills:bridge
 ```
 
-Then load generated local bridge files from `.claude/skills/`.
+See [.agents/README.md](.agents/README.md) for the canonical skill layout, validation, bridge generation, and artifact policy.
 
 ## Demo
 
-- Hosted demo: `https://joe-byounghern-kim.github.io/zusound/`
+[Open the hosted Signal Lab](https://joe-byounghern-kim.github.io/zusound/).
 
-Run the demo locally:
-
-```bash
-pnpm build
-node demo/server.js
-```
-
-Then open `http://localhost:3000`.
-
-For detailed demo setup, scenes, and architecture notes, see `demo/README.md`.
-
-TypeScript users can also verify framework integration with the React + Vite strict demo:
+Run the same React and Vite application locally:
 
 ```bash
-pnpm demo:react:typecheck
-pnpm demo:react:dev
+pnpm demo:dev
 ```
 
-See `examples/README.md` for details.
-
-Pages deploys are automated through `.github/workflows/deploy-demo.yml` on relevant `main` changes or manual workflow dispatch.
+Open `http://localhost:5173`. For workspace details, see [demo/README.md](demo/README.md). Pages deployment is automated by `.github/workflows/deploy-demo.yml`.
 
 ## License
 

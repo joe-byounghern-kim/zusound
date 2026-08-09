@@ -28,6 +28,7 @@
     "prepare": "husky",
     "readme:check": "node scripts/sync-readme.mjs --check",
     "readme:sync": "node scripts/sync-readme.mjs",
+    "docs:check": "pnpm readme:check && node scripts/check-docs.mjs",
     "security:check": "node scripts/check-audit.mjs",
     "skills:bridge": "node scripts/build-skill-bridge.mjs",
     "skills:check": "node scripts/check-skills.mjs",
