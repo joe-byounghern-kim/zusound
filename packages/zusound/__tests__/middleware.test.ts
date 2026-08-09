@@ -5,8 +5,8 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createStore, type StoreApi } from 'zustand/vanilla'
-import { zusound } from '../src/middleware'
-import { attachZusound, createZusound } from '../src/adapter'
+import { createZusound, zusound } from '../src/index'
+import { attachZusound } from '../src/adapter'
 import { cleanupAudio } from '../src/audio'
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))

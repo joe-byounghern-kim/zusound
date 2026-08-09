@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { createStore } from 'zustand/vanilla'
 import * as dissonance from '../src/dissonance'
-import { zusound } from '../src/middleware'
+import { zusound } from '../src/index'
 import { cleanupAudio } from '../src/audio'
 
 type CounterState = {
