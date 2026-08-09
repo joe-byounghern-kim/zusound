@@ -8,6 +8,18 @@
 
 **Tech Stack:** Node 22.22.2 minimum, Node 24.19.0 LTS, pnpm 11.20.0, TypeScript 5.9.3, ESLint 10.8.1, Vite 8.2.1, Vitest 4.1.10, jsdom 30.0.1, React 19.2.8, Turbo 2.10.9, Knip 6.32.0, Publint 0.3.23, `@arethetypeswrong/cli` 0.18.5, Action Validator 0.6.0, Dependabot Validator 0.3.3, GitHub Actions
 
+## Pre-implementation Acceptance Evidence
+
+On 2026-08-09, an isolated upgraded-dependency prototype exercised the planned public and integration boundaries without modifying the active checkout:
+
+- Frozen pnpm `11.20.0` installs, package typechecking, package builds, demo typechecking, and Vite production builds passed on Node `22.22.2` and `24.19.0`.
+- Vitest `4.1.10` passed all 102 tests across 11 files on both Node versions. Coverage remained above every configured threshold at 89.35% statements, 83.24% branches, 93.42% functions, and 93.25% lines.
+- A packed `zusound@0.2.4` tarball passed six external-consumer matrices: Node `22.22.2` and `24.19.0`, each with Zustand `4.0.0`, `4.5.7`, and `5.0.14`. Every matrix exercised ESM and CommonJS runtime imports, exact runtime exports, the disabled middleware/subscriber lifecycle, the package version, NodeNext `.mts` and `.cts` declaration resolution, and every public type export.
+- Publint strict validation reported no package problems, and Are the Types Wrong strict validation passed the package root for CJS, ESM, bundler, and legacy Node resolution profiles.
+- The all-severity security assertion reported zero info, low, moderate, high, and critical findings. The deterministic outdated allowlist and all workflow plus Dependabot schema checks also passed.
+
+This is representative pre-implementation evidence for the dependency graph and package boundaries. It does not claim that Tasks 1-8 have been applied to the repository, and it does not replace the final browser interaction pass or clean-worktree acceptance sequence.
+
 ## Global Constraints
 
 - Execute in an isolated worktree created through `superpowers:using-git-worktrees`; do not implement directly in the user's active checkout.
