@@ -3,7 +3,7 @@ const LINKS = [
   { label: 'npm', href: 'https://www.npmjs.com/package/zusound' },
   {
     label: 'Quick Start',
-    href: 'https://github.com/joe-byounghern-kim/zusound/blob/main/QUICK_START.md',
+    href: 'https://github.com/joe-byounghern-kim/zusound/blob/main/README.md#quick-usage',
   },
   {
     label: 'Full Docs',
