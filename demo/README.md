@@ -14,8 +14,8 @@ From repository root:
 
 ```bash
 pnpm install
-pnpm demo:react:typecheck
-pnpm demo:react:dev
+pnpm demo:typecheck
+pnpm demo:dev
 ```
 
 Open `http://localhost:5173`.
@@ -23,8 +23,8 @@ Open `http://localhost:5173`.
 ## Build check
 
 ```bash
-pnpm demo:react:typecheck
-pnpm demo:react:build
+pnpm demo:typecheck
+pnpm demo:build
 ```
 
 ## Key patterns
