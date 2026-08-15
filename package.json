@@ -11,27 +11,30 @@
   "type": "module",
   "workspaces": [
     "packages/zusound",
-    "examples"
+    "demo"
   ],
   "scripts": {
     "build": "turbo run build",
     "build:watch": "turbo run build:watch",
     "changeset": "changeset",
     "clean": "turbo run clean && rm -rf node_modules",
-    "clean:artifacts": "node scripts/clean-local-artifacts.mjs",
     "dev": "turbo run dev",
-    "demo:stage": "pnpm build && pnpm -C demo run stage",
-    "demo:stage:clean": "pnpm -C demo run clean-stage",
-    "demo:verify": "pnpm -C demo run check-stage",
-    "demo:preview": "python3 -m http.server 4173 --directory demo/dist-site",
-    "demo:react:dev": "pnpm -C examples dev",
-    "demo:react:build": "pnpm -C examples build",
-    "demo:react:typecheck": "pnpm -C examples typecheck",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml}\"",
-    "lint": "turbo run lint",
-    "prepare": "husky install",
+    "demo:build": "pnpm -C packages/zusound build && pnpm -C demo build",
+    "demo:dev": "pnpm -C packages/zusound build && pnpm -C demo dev",
+    "demo:preview": "pnpm demo:build && pnpm -C demo run preview",
+    "demo:typecheck": "pnpm -C packages/zusound build && pnpm -C demo typecheck",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "knip": "knip --reporter compact",
+    "lint": "eslint eslint.config.js scripts --max-warnings=0 && turbo run lint",
+    "prepare": "husky",
     "readme:check": "node scripts/sync-readme.mjs --check",
     "readme:sync": "node scripts/sync-readme.mjs",
+    "docs:check": "pnpm readme:check && node scripts/check-docs.mjs",
+    "deps:check": "node scripts/check-outdated.mjs",
+    "package:check": "node scripts/check-package.mjs && publint run packages/zusound --strict --level warning && attw --pack packages/zusound",
+    "automation:check": "node scripts/check-automation.mjs",
+    "security:check": "node scripts/check-audit.mjs",
     "skills:bridge": "node scripts/build-skill-bridge.mjs",
     "skills:check": "node scripts/check-skills.mjs",
     "skills:validate": "pnpm skills:check",
@@ -40,43 +43,38 @@
     "release:auto:prepare": "node scripts/create-auto-changeset.mjs && pnpm version-packages",
     "release:auto:dry-run": "node scripts/create-auto-changeset.mjs --dry-run",
     "test": "turbo run test",
-    "test:clean-artifacts": "node --test scripts/clean-local-artifacts.test.mjs",
     "test:coverage": "turbo run test:coverage",
     "test:watch": "turbo run test:watch",
     "typecheck": "turbo run typecheck",
+    "verify": "pnpm format:check && pnpm security:check && pnpm deps:check && pnpm docs:check && pnpm skills:validate && pnpm knip && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm package:check",
     "version-packages": "changeset version"
   },
   "devDependencies": {
-    "@changesets/changelog-github": "^0.7.0",
-    "@changesets/cli": "^2.27.1",
-    "@eslint/js": "^9.39.5",
-    "@types/node": "^20.11.0",
-    "@typescript-eslint/eslint-plugin": "^8.65.0",
-    "@typescript-eslint/parser": "^8.65.0",
-    "eslint": "^9.39.5",
+    "@action-validator/cli": "^0.6.0",
+    "@action-validator/core": "^0.6.0",
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@bugron/validate-dependabot-yaml": "^0.3.3",
+    "@changesets/changelog-github": "^1.0.0",
+    "@changesets/cli": "^3.0.0",
+    "@eslint/js": "^10.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.67.0",
+    "@typescript-eslint/parser": "^8.67.0",
+    "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.3",
-    "globals": "^16.5.0",
-    "husky": "^8.0.3",
-    "lint-staged": "^15.2.0",
-    "prettier": "^3.2.4",
-    "turbo": "^2.9.14",
-    "typescript": "^5.3.3",
-    "zustand": "^4.4.7"
+    "eslint-plugin-react-refresh": "^0.5.4",
+    "globals": "^17.11.0",
+    "husky": "^9.1.7",
+    "knip": "^6.32.2",
+    "lint-staged": "^17.3.0",
+    "prettier": "^3.9.6",
+    "publint": "^0.3.23",
+    "turbo": "^2.10.9",
+    "typescript": "^5.9.3"
   },
-  "packageManager": "pnpm@10.34.5",
+  "packageManager": "pnpm@11.20.0",
   "engines": {
-    "node": ">=20.19.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ],
-    "overrides": {
-      "esbuild": "0.28.1"
-    }
+    "node": ">=22.22.2"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { version } from '../src/version'
+import { version } from '../src/index'
 
 describe('version export', () => {
   it('returns a non-empty string', () => {

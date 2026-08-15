@@ -17,8 +17,10 @@
  * ```
  */
 
-export { zusound } from './middleware'
-export { createZusound } from './adapter'
+import { createZusound } from './adapter'
+
+export { createZusound }
+export const zusound = createZusound()
 
 // Public type exports
 export type {
