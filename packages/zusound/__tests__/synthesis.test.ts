@@ -2,11 +2,13 @@ import { describe, expect, it, vi } from 'vitest'
 import { createTimbreWave } from '../src/synthesis'
 
 function createMockContext() {
-  const createPeriodicWave = vi.fn((real: Float32Array, imag: Float32Array, options?: any) => ({
-    real,
-    imag,
-    options,
-  }))
+  const createPeriodicWave = vi.fn(
+    (real: Float32Array, imag: Float32Array, options?: PeriodicWaveConstraints) => ({
+      real,
+      imag,
+      options,
+    })
+  )
 
   return { ctx: { createPeriodicWave } as unknown as AudioContext, createPeriodicWave }
 }
@@ -56,8 +58,8 @@ describe('synthesis', () => {
   it('reduces high-harmonic amplitude as brightness decreases', () => {
     const { ctx } = createMockContext()
 
-    const bright = createTimbreWave(ctx, 1, 10) as any
-    const dark = createTimbreWave(ctx, 0, 10) as any
+    const bright = createTimbreWave(ctx, 1, 10) as unknown as { imag: Float32Array }
+    const dark = createTimbreWave(ctx, 0, 10) as unknown as { imag: Float32Array }
 
     expect(dark.imag[10]).toBeLessThan(bright.imag[10])
   })

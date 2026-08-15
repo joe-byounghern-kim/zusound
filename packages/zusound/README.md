@@ -151,6 +151,7 @@ const useStore = create(
 - Browsers may keep `AudioContext` suspended until user interaction.
 - `performanceMode` is recommended for low-power or high-frequency update scenarios.
 - Use `onError` if you need telemetry for non-fatal audio/debugging failures.
+
 <!-- README_SYNC:SECTION_END:production-notes -->
 
 <!-- README_SYNC:SECTION_START:what-youll-hear -->
@@ -161,16 +162,15 @@ const useStore = create(
 - Booleans: short click-like cues
 - Strings: brighter/longer character
 - Objects/arrays: more layered motion
+
 <!-- README_SYNC:SECTION_END:what-youll-hear -->
 
 ## Related Docs
 
-- Root project overview: [README](https://github.com/joe-byounghern-kim/zusound/blob/main/README.md)
-- Quick start guide: [QUICK_START](https://github.com/joe-byounghern-kim/zusound/blob/main/QUICK_START.md)
-- Dev workflow: [DEVELOPMENT](https://github.com/joe-byounghern-kim/zusound/blob/main/DEVELOPMENT.md)
-- Demo usage: [demo/README](https://github.com/joe-byounghern-kim/zusound/blob/main/demo/README.md)
-- React strict TypeScript demo: [examples/README](https://github.com/joe-byounghern-kim/zusound/blob/main/examples/README.md)
-- Operations runbook: [docs/RUNBOOK](https://github.com/joe-byounghern-kim/zusound/blob/main/docs/RUNBOOK.md)
+- [Project overview](https://github.com/joe-byounghern-kim/zusound/blob/main/README.md)
+- [Contributing](https://github.com/joe-byounghern-kim/zusound/blob/main/CONTRIBUTING.md)
+- [Demo](https://github.com/joe-byounghern-kim/zusound/blob/main/demo/README.md)
+- [Releasing](https://github.com/joe-byounghern-kim/zusound/blob/main/docs/RELEASING.md)
 
 ## License
 

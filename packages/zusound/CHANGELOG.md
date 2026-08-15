@@ -1,5 +1,11 @@
 # zusound
 
+## 0.2.5
+
+### Patch Changes
+
+- [#70](https://github.com/joe-byounghern-kim/zusound/pull/70) [`dcda2f0`](https://github.com/joe-byounghern-kim/zusound/commit/dcda2f0179b0b75bd49cee5776b1f668bb789c0e) Thanks [@joe-byounghern-kim](https://github.com/joe-byounghern-kim)! - Modernize package export metadata, compatibility validation, and demo and release infrastructure while preserving the public API and supported Zustand range.
+
 ## 0.2.4
 
 ### Patch Changes

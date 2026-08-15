@@ -46,7 +46,6 @@ coverage
 # OS files
 Thumbs.db
 
-demo/dist-site
 .save
 .omx
 .omc

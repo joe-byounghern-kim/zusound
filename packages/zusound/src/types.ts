@@ -129,7 +129,10 @@ export type ZusoundSubscriber<TState> = (currentState: TState, prevState: TState
  */
 export interface ZusoundInstance {
   /** Middleware mode: wraps a Zustand state creator. */
-  <T extends object>(initializer: StateCreator<T, [], []>, options?: ZusoundOptions): StateCreator<T, [], []>
+  <T extends object>(
+    initializer: StateCreator<T, [], []>,
+    options?: ZusoundOptions
+  ): StateCreator<T, [], []>
   /** Subscriber mode: called with (currentState, prevState) on each store update. */
   <T>(currentState: T, prevState: T): void
   /** Release audio resources held by this instance. */

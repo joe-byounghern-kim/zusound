@@ -1,6 +1,6 @@
 {
   "name": "zusound",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Hear bugs before you see them - audio debugging for Zustand",
   "keywords": [
     "zustand",
@@ -20,9 +20,14 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
   "main": "./dist/index.cjs",
@@ -38,24 +43,23 @@
     "build:watch": "tsup --watch",
     "clean": "rm -rf dist coverage",
     "dev": "tsup --watch",
-    "lint": "eslint src",
+    "lint": "eslint src __tests__ tsup.config.ts vitest.config.ts --max-warnings=0",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
   },
   "peerDependencies": {
     "zustand": ">=4.0.0 <6.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
-    "@vitest/coverage-v8": "^3.2.6",
-    "html-encoding-sniffer": "^6.0.0",
-    "jsdom": "^26.1.0",
-    "tsup": "^8.0.1",
-    "typescript": "^5.3.3",
-    "vite": "^6.4.3",
-    "vitest": "^3.2.6",
-    "zustand": "^5.0.11"
+    "@types/node": "^24.13.3",
+    "@vitest/coverage-v8": "^4.1.10",
+    "jsdom": "^30.0.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vite": "^8.2.1",
+    "vitest": "^4.1.10",
+    "zustand": "^5.0.15"
   }
 }
