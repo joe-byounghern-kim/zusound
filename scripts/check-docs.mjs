@@ -16,6 +16,7 @@ const documents = execFileSync(
   .split('\0')
   .filter(Boolean)
   .filter((file) => ['.md', '.mdx'].includes(extname(file).toLowerCase()))
+  .filter((file) => existsSync(resolve(root, file)))
 
 const markdownLinks = /!?\[[^\]]*\]\(([^)]+)\)/g
 const referenceLinks = /^\[[^\]]+\]:\s*(\S+)/gm
