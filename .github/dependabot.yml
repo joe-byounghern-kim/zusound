@@ -1,0 +1,63 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories:
+      - /
+      - /demo
+      - /packages/zusound
+    schedule:
+      interval: weekly
+      day: monday
+      time: '09:00'
+      timezone: Etc/UTC
+    open-pull-requests-limit: 10
+    ignore:
+      - dependency-name: typescript
+        update-types:
+          - version-update:semver-major
+      - dependency-name: '@types/node'
+        update-types:
+          - version-update:semver-major
+    groups:
+      eslint:
+        patterns:
+          - eslint
+          - '@eslint/*'
+          - '@typescript-eslint/*'
+          - eslint-config-prettier
+          - eslint-plugin-react-hooks
+          - eslint-plugin-react-refresh
+          - globals
+      vite:
+        patterns:
+          - vite
+          - '@vitejs/*'
+      vitest:
+        patterns:
+          - vitest
+          - '@vitest/*'
+          - jsdom
+      react:
+        patterns:
+          - react
+          - react-dom
+          - '@types/react*'
+      changesets:
+        patterns:
+          - '@changesets/*'
+      automation-validation:
+        patterns:
+          - '@action-validator/*'
+          - '@bugron/validate-dependabot-yaml'
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '09:00'
+      timezone: Etc/UTC
+    groups:
+      actions:
+        patterns:
+          - '*'
