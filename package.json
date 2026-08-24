@@ -55,7 +55,7 @@
     "@arethetypeswrong/cli": "^0.18.5",
     "@bugron/validate-dependabot-yaml": "^0.3.3",
     "@changesets/changelog-github": "^1.0.0",
-    "@changesets/cli": "^3.0.0",
+    "@changesets/cli": "^3.0.1",
     "@eslint/js": "^10.0.1",
     "@typescript-eslint/eslint-plugin": "^8.67.0",
     "@typescript-eslint/parser": "^8.67.0",
