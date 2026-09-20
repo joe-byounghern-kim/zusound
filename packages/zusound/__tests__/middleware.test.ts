@@ -4,10 +4,12 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { createStore, type StoreApi } from 'zustand/vanilla'
+import { createStore } from 'zustand/vanilla'
+import { devtools, persist, subscribeWithSelector } from 'zustand/middleware'
 import { createZusound, zusound } from '../src/index'
 import { attachZusound } from '../src/adapter'
 import { cleanupAudio } from '../src/audio'
+import * as audio from '../src/audio'
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
@@ -33,12 +35,10 @@ type CounterState = {
   increment: () => void
 }
 
-type CounterStoreWithCleanup = StoreApi<CounterState> & {
-  zusoundCleanup: () => void
+type MultiPathState = {
+  count: number
+  status: number
 }
-
-const withCleanup = (store: StoreApi<CounterState>): CounterStoreWithCleanup =>
-  store as unknown as CounterStoreWithCleanup
 
 // Mock Web Audio API
 const mockAudioContext = {
@@ -88,7 +88,7 @@ describe('Zusound Middleware', () => {
   })
 
   it('should create a store without breaking functionality', () => {
-    const store = createStore<CounterState>(
+    const store = createStore<CounterState>()(
       zusound((set) => ({
         count: 0,
         increment: () => set((state) => ({ count: state.count + 1 })),
@@ -101,7 +101,7 @@ describe('Zusound Middleware', () => {
   })
 
   it('should support zero-arg initializer middleware form', () => {
-    const store = createStore<CounterState>(
+    const store = createStore<CounterState>()(
       zusound(() => ({
         count: 0,
         increment: () => {},
@@ -113,7 +113,7 @@ describe('Zusound Middleware', () => {
   })
 
   it('should support zero-arg initializer middleware form with options', () => {
-    const store = createStore<CounterState>(
+    const store = createStore<CounterState>()(
       zusound(
         () => ({
           count: 0,
@@ -129,7 +129,7 @@ describe('Zusound Middleware', () => {
   })
 
   it('should disable audio when enabled is false', () => {
-    const store = createStore<CounterState>(
+    const store = createStore<CounterState>()(
       zusound(
         (set) => ({
           count: 0,
@@ -146,7 +146,7 @@ describe('Zusound Middleware', () => {
   })
 
   it('should respect volume setting', () => {
-    const store = createStore<CounterState>(
+    const store = createStore<CounterState>()(
       zusound(
         (set) => ({
           count: 0,
@@ -162,7 +162,7 @@ describe('Zusound Middleware', () => {
   })
 
   it('should provide cleanup function', () => {
-    const store = createStore<CounterState>(
+    const store = createStore<CounterState>()(
       zusound((set) => ({
         count: 0,
         increment: () => set((state) => ({ count: state.count + 1 })),
@@ -170,7 +170,7 @@ describe('Zusound Middleware', () => {
     )
 
     // Should have cleanup function attached
-    expect(typeof withCleanup(store).zusoundCleanup).toBe('function')
+    expect(typeof store.zusoundCleanup).toBe('function')
   })
 
   it('should report subscription attach failures through onError and return safe cleanup', () => {
@@ -212,11 +212,11 @@ describe('Zusound Middleware', () => {
       throw new Error('initializer failed')
     }
 
-    expect(() => createStore<CounterState>(zusound(failingInitializer, { enabled: true }))).toThrow(
-      'initializer failed'
-    )
+    expect(() =>
+      createStore<CounterState>()(zusound(failingInitializer, { enabled: true }))
+    ).toThrow('initializer failed')
 
-    const store = createStore<CounterState>(
+    const store = createStore<CounterState>()(
       zusound(
         (set) => ({
           count: 0,
@@ -227,7 +227,7 @@ describe('Zusound Middleware', () => {
     )
 
     store.getState().increment()
-    withCleanup(store).zusoundCleanup()
+    store.zusoundCleanup()
 
     expect(mockAudioContext.close).toHaveBeenCalledTimes(1)
   })
@@ -237,7 +237,7 @@ describe('Zusound Middleware', () => {
       count: { frequency: 440, waveform: 'sine' as const },
     }
 
-    const store = createStore<CounterState>(
+    const store = createStore<CounterState>()(
       zusound(
         (set) => ({
           count: 0,
@@ -255,7 +255,7 @@ describe('Zusound Middleware', () => {
   })
 
   it('should handle debouncing', async () => {
-    const store = createStore<CounterState>(
+    const store = createStore<CounterState>()(
       zusound(
         (set) => ({
           count: 0,
@@ -280,7 +280,7 @@ describe('Zusound Middleware', () => {
   })
 
   it('should clear pending debounce playback on cleanup and allow repeated cleanup', async () => {
-    const store = createStore<CounterState>(
+    const store = createStore<CounterState>()(
       zusound(
         (set) => ({
           count: 0,
@@ -294,17 +294,17 @@ describe('Zusound Middleware', () => {
     )
 
     store.getState().increment()
-    withCleanup(store).zusoundCleanup()
+    store.zusoundCleanup()
 
     await sleep(170)
 
     expect(window.AudioContext).not.toHaveBeenCalled()
-    expect(() => withCleanup(store).zusoundCleanup()).not.toThrow()
+    expect(() => store.zusoundCleanup()).not.toThrow()
   })
 
   it('suppresses queued playback after cleanup while another store keeps the audio engine alive', async () => {
-    const createCounterStore = (): CounterStoreWithCleanup =>
-      createStore<CounterState>(
+    const createCounterStore = () =>
+      createStore<CounterState>()(
         zusound(
           (set) => ({
             count: 0,
@@ -312,7 +312,7 @@ describe('Zusound Middleware', () => {
           }),
           { enabled: true }
         )
-      ) as unknown as CounterStoreWithCleanup
+      )
 
     const storeA = createCounterStore()
     const storeB = createCounterStore()
@@ -328,8 +328,8 @@ describe('Zusound Middleware', () => {
   })
 
   it('keeps the shared audio engine alive until all stores are cleaned up', () => {
-    const createCounterStore = (): CounterStoreWithCleanup =>
-      createStore<CounterState>(
+    const createCounterStore = () =>
+      createStore<CounterState>()(
         zusound(
           (set) => ({
             count: 0,
@@ -337,7 +337,7 @@ describe('Zusound Middleware', () => {
           }),
           { enabled: true }
         )
-      ) as unknown as CounterStoreWithCleanup
+      )
 
     const storeA = createCounterStore()
     const storeB = createCounterStore()
@@ -355,7 +355,7 @@ describe('Zusound Middleware', () => {
     const originalEnv = process.env.NODE_ENV
     process.env.NODE_ENV = 'production'
 
-    const store = createStore<CounterState>(
+    const store = createStore<CounterState>()(
       zusound((set) => ({
         count: 0,
         increment: () => set((state) => ({ count: state.count + 1 })),
@@ -374,7 +374,7 @@ describe('Zusound Middleware', () => {
     const originalEnv = process.env.NODE_ENV
     process.env.NODE_ENV = 'production'
 
-    const store = createStore<CounterState>(
+    const store = createStore<CounterState>()(
       zusound(
         (set) => ({
           count: 0,
@@ -388,6 +388,51 @@ describe('Zusound Middleware', () => {
     expect(window.AudioContext).toHaveBeenCalled()
 
     process.env.NODE_ENV = originalEnv
+  })
+
+  it('supports documented devtools, persist, and selector middleware composition', () => {
+    const persisted = createStore<CounterState>()(
+      devtools(
+        persist(
+          zusound(
+            (set) => ({
+              count: 0,
+              increment: () => set((state) => ({ count: state.count + 1 })),
+            }),
+            { enabled: false }
+          ),
+          { name: 'zusound-composition-test' }
+        )
+      )
+    )
+
+    persisted.setState({ count: 2 }, false, 'counter/set')
+    expect(persisted.getState().count).toBe(2)
+    expect(typeof persisted.persist.clearStorage).toBe('function')
+    persisted.zusoundCleanup()
+
+    const selected = createStore<CounterState>()(
+      subscribeWithSelector(
+        zusound(
+          (set) => ({
+            count: 0,
+            increment: () => set((state) => ({ count: state.count + 1 })),
+          }),
+          { enabled: false }
+        )
+      )
+    )
+    const selectedValues = vi.fn()
+    const unsubscribe = selected.subscribe(
+      (state) => state.count,
+      (count) => selectedValues(count)
+    )
+
+    selected.getState().increment()
+
+    expect(selectedValues).toHaveBeenCalledWith(1)
+    unsubscribe()
+    selected.zusoundCleanup()
   })
 
   describe('Subscriber Usage', () => {
@@ -417,7 +462,7 @@ describe('Zusound Middleware', () => {
     })
 
     it('should function correctly when passed directly to store.subscribe', () => {
-      const store = createStore<CounterState>((set) => ({
+      const store = createStore<CounterState>()((set) => ({
         count: 0,
         increment: () => set((state) => ({ count: state.count + 1 })),
       }))
@@ -438,7 +483,7 @@ describe('Zusound Middleware', () => {
       const originalEnv = process.env.NODE_ENV
       process.env.NODE_ENV = 'production'
 
-      const store = createStore<CounterState>((set) => ({
+      const store = createStore<CounterState>()((set) => ({
         count: 0,
         increment: () => set((state) => ({ count: state.count + 1 })),
       }))
@@ -454,7 +499,7 @@ describe('Zusound Middleware', () => {
     })
 
     it('supports configured subscriber via createZusound with debounce', async () => {
-      const store = createStore<CounterState>((set) => ({
+      const store = createStore<CounterState>()((set) => ({
         count: 0,
         increment: () => set((state) => ({ count: state.count + 1 })),
       }))
@@ -474,8 +519,94 @@ describe('Zusound Middleware', () => {
       configuredZusound.cleanup()
     })
 
-    it('keeps subscriber audio alive when middleware cleanup runs', () => {
-      const middlewareStore = createStore<CounterState>(
+    it('keeps subscriber debounce descriptors bounded and ordered by last occurrence', async () => {
+      vi.useFakeTimers()
+      const playSoundSpy = vi.spyOn(audio, 'playSound').mockResolvedValue(undefined)
+      const store = createStore<MultiPathState>()(() => ({ count: 0, status: 0 }))
+      const configuredZusound = createZusound({ enabled: true, debounceMs: 20 })
+      const unsubscribe = store.subscribe(configuredZusound)
+
+      try {
+        store.setState({ count: 1 })
+        store.setState({ status: 1 })
+        store.setState({ count: 2 })
+
+        await vi.advanceTimersByTimeAsync(25)
+
+        expect(playSoundSpy).toHaveBeenCalledTimes(2)
+        expect(playSoundSpy.mock.calls[0]?.[0]).toMatchObject({ path: 'status', newValue: 1 })
+        expect(playSoundSpy.mock.calls[1]?.[0]).toMatchObject({ path: 'count', newValue: 2 })
+      } finally {
+        unsubscribe()
+        configuredZusound.cleanup()
+        playSoundSpy.mockRestore()
+        vi.useRealTimers()
+      }
+    })
+
+    it('cancels subscriber debounce playback on terminal cleanup', async () => {
+      vi.useFakeTimers()
+      const playSoundSpy = vi.spyOn(audio, 'playSound').mockResolvedValue(undefined)
+      const store = createStore<CounterState>()((set) => ({
+        count: 0,
+        increment: () => set((state) => ({ count: state.count + 1 })),
+      }))
+      const configuredZusound = createZusound({ enabled: true, debounceMs: 20 })
+      const unsubscribe = store.subscribe(configuredZusound)
+
+      try {
+        store.getState().increment()
+        configuredZusound.cleanup()
+
+        await vi.advanceTimersByTimeAsync(25)
+
+        expect(playSoundSpy).not.toHaveBeenCalled()
+      } finally {
+        unsubscribe()
+        configuredZusound.cleanup()
+        playSoundSpy.mockRestore()
+        vi.useRealTimers()
+      }
+    })
+
+    it('requires a fresh subscriber instance after terminal cleanup', () => {
+      const playSoundSpy = vi.spyOn(audio, 'playSound').mockResolvedValue(undefined)
+      const store = createStore<CounterState>()((set) => ({
+        count: 0,
+        increment: () => set((state) => ({ count: state.count + 1 })),
+      }))
+      const terminal = createZusound({ enabled: true })
+      const unsubscribeTerminal = store.subscribe(terminal)
+
+      try {
+        terminal.cleanup()
+        store.getState().increment()
+        expect(playSoundSpy).not.toHaveBeenCalled()
+
+        const fresh = createZusound({ enabled: true })
+        const unsubscribeFresh = store.subscribe(fresh)
+        store.getState().increment()
+
+        expect(playSoundSpy).toHaveBeenCalledTimes(1)
+        unsubscribeFresh()
+        fresh.cleanup()
+      } finally {
+        unsubscribeTerminal()
+        terminal.cleanup()
+        playSoundSpy.mockRestore()
+      }
+    })
+
+    it('prevents playback when cleanup occurs while audio resume is pending', async () => {
+      let resolveResume: (() => void) | undefined
+      mockAudioContext.state = 'suspended'
+      mockAudioContext.resume.mockImplementation(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveResume = resolve
+          })
+      )
+      const store = createStore<CounterState>()(
         zusound(
           (set) => ({
             count: 0,
@@ -483,9 +614,34 @@ describe('Zusound Middleware', () => {
           }),
           { enabled: true }
         )
-      ) as unknown as CounterStoreWithCleanup
+      )
 
-      const subscriberStore = createStore<CounterState>((set) => ({
+      try {
+        store.getState().increment()
+        store.zusoundCleanup()
+        resolveResume?.()
+        await Promise.resolve()
+        await Promise.resolve()
+
+        expect(mockAudioContext.createOscillator).not.toHaveBeenCalled()
+      } finally {
+        mockAudioContext.state = 'running'
+        mockAudioContext.resume.mockResolvedValue(undefined)
+      }
+    })
+
+    it('keeps subscriber audio alive when middleware cleanup runs', () => {
+      const middlewareStore = createStore<CounterState>()(
+        zusound(
+          (set) => ({
+            count: 0,
+            increment: () => set((state) => ({ count: state.count + 1 })),
+          }),
+          { enabled: true }
+        )
+      )
+
+      const subscriberStore = createStore<CounterState>()((set) => ({
         count: 0,
         increment: () => set((state) => ({ count: state.count + 1 })),
       }))
@@ -506,7 +662,7 @@ describe('Zusound Middleware', () => {
     })
 
     it('releases subscriber audio engine on cleanup', () => {
-      const subscriberStore = createStore<CounterState>((set) => ({
+      const subscriberStore = createStore<CounterState>()((set) => ({
         count: 0,
         increment: () => set((state) => ({ count: state.count + 1 })),
       }))
@@ -520,7 +676,7 @@ describe('Zusound Middleware', () => {
       unsubscribe()
       configuredZusound.cleanup()
 
-      const middlewareStore = createStore<CounterState>(
+      const middlewareStore = createStore<CounterState>()(
         zusound(
           (set) => ({
             count: 0,
@@ -539,7 +695,7 @@ describe('Zusound Middleware', () => {
       mockAudioContext.state = 'suspended'
       mockAudioContext.resume.mockRejectedValueOnce(new Error('resume-failed'))
 
-      const store = createStore<CounterState>(
+      const store = createStore<CounterState>()(
         zusound(
           (set) => ({
             count: 0,
