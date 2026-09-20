@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
+import { createStore } from 'zustand/vanilla'
 import { attachZusound } from '../src/adapter'
 import * as audio from '../src/audio'
 import { reportError } from '../src/errors'
+import { zusound } from '../src/index'
 
 describe('reportError', () => {
   it('isolates a throwing diagnostic callback', () => {
@@ -53,6 +55,36 @@ describe('reportError', () => {
       expect(onError).toHaveBeenCalledWith(original, { stage: 'state-change-processing' })
     } finally {
       handle.cleanup()
+      warnSpy.mockRestore()
+      debugSpy.mockRestore()
+    }
+  })
+
+  it('retains a real Zustand update when state processing diagnostics throw', () => {
+    const original = new Error('state inspection failed')
+    const onError = vi.fn(() => {
+      throw new Error('telemetry failed')
+    })
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => undefined)
+    const store = createStore<{ value: object }>()(
+      zusound(() => ({ value: {} }), { enabled: true, onError })
+    )
+    const next = new Proxy(
+      {},
+      {
+        ownKeys: () => {
+          throw original
+        },
+      }
+    )
+
+    try {
+      expect(() => store.setState({ value: next })).not.toThrow()
+      expect(store.getState().value).toBe(next)
+      expect(onError).toHaveBeenCalledWith(original, { stage: 'state-change-processing' })
+    } finally {
+      store.zusoundCleanup()
       warnSpy.mockRestore()
       debugSpy.mockRestore()
     }

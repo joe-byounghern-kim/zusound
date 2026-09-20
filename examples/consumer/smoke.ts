@@ -12,6 +12,8 @@ const initializer: StateCreator<State, [], []> = (set) => ({
 const enhanced = zusound(initializer, { enabled: false })
 const store = createStore<State>()(enhanced)
 store.zusoundCleanup()
+const reactStore = create<State>()(enhanced)
+reactStore.zusoundCleanup()
 // @ts-expect-error an empty output tuple cannot describe the added cleanup mutator
 const erased: StateCreator<State, [], []> = enhanced
 void erased
@@ -46,6 +48,10 @@ store.zusoundCleanup('invalid')
 const unenhanced = createStore<State>()(initializer)
 // @ts-expect-error stores without the middleware must not claim a cleanup method
 unenhanced.zusoundCleanup()
+// @ts-expect-error uncurried vanilla creation erases cleanup output metadata
+createStore<State>(enhanced)
+// @ts-expect-error uncurried React creation erases cleanup output metadata
+create<State>(enhanced)
 const subscriber = createZusound({ enabled: false })
 const listener: (state: State, previousState: State) => void = subscriber
 subscriber.cleanup()

@@ -279,6 +279,29 @@ describe('Zusound Middleware', () => {
     expect(window.AudioContext).toHaveBeenCalledTimes(1)
   })
 
+  it('keeps middleware debounce descriptors ordered by last occurrence', async () => {
+    vi.useFakeTimers()
+    const playSoundSpy = vi.spyOn(audio, 'playSound').mockResolvedValue(undefined)
+    const store = createStore<MultiPathState>()(
+      zusound(() => ({ count: 0, status: 0 }), { enabled: true, debounceMs: 20 })
+    )
+
+    try {
+      store.setState({ count: 1 })
+      store.setState({ status: 1 })
+      store.setState({ count: 2 })
+      await vi.advanceTimersByTimeAsync(25)
+
+      expect(playSoundSpy).toHaveBeenCalledTimes(2)
+      expect(playSoundSpy.mock.calls[0]?.[0]).toMatchObject({ path: 'status', newValue: 1 })
+      expect(playSoundSpy.mock.calls[1]?.[0]).toMatchObject({ path: 'count', newValue: 2 })
+    } finally {
+      store.zusoundCleanup()
+      playSoundSpy.mockRestore()
+      vi.useRealTimers()
+    }
+  })
+
   it('should clear pending debounce playback on cleanup and allow repeated cleanup', async () => {
     const store = createStore<CounterState>()(
       zusound(

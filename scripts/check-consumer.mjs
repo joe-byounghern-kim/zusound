@@ -81,7 +81,7 @@ try {
   } else {
     const smokeSource = readFileSync(join(directory, 'smoke.ts'), 'utf8').replace(
       '// __ZUSOUND_CREATE_STORE_IMPORT__',
-      "import { createStore } from 'zustand/vanilla'"
+      "import { createStore } from 'zustand/vanilla'\nimport { create } from 'zustand'"
     )
     writeFileSync(join(directory, 'smoke.ts'), smokeSource)
     // Compile the same contract through both import and require type exports.
