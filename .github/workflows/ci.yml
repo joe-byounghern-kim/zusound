@@ -68,80 +68,8 @@ jobs:
           node-version: 24.19.0
           cache: pnpm
 
-      - name: Install and build
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm -C packages/zusound build
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      - name: Pack package
-        id: pack
-        run: |
-          TARBALL=$(pnpm -C packages/zusound pack --pack-destination "$RUNNER_TEMP" --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>process.stdout.write(JSON.parse(s).filename))")
-          echo "tarball=$TARBALL" >> "$GITHUB_OUTPUT"
-
-      - name: Install consumer fixture
-        working-directory: ${{ runner.temp }}
-        run: |
-          mkdir consumer
-          cd consumer
-          npm init -y
-          npm pkg set type=module
-          npm install "${{ steps.pack.outputs.tarball }}" "zustand@${{ matrix.zustand-version }}" typescript@5.9.3
-          cat > smoke.mjs <<'EOF'
-          import * as vanilla from 'zustand/vanilla'
-          import { createZusound, version, zusound } from 'zusound'
-
-          const createStore = vanilla.createStore ?? vanilla.default
-          const store = createStore(zusound(() => ({ count: 0 }), { enabled: false }))
-          const instance = createZusound({ enabled: false })
-          const unsubscribe = store.subscribe(instance)
-          unsubscribe()
-          instance.cleanup()
-          if (typeof version !== 'string' || version.length === 0) process.exit(1)
-          EOF
-          node smoke.mjs
-
-          cat > smoke.cjs <<'EOF'
-          const vanilla = require('zustand/vanilla')
-          const { createZusound, version, zusound } = require('zusound')
-
-          const createStore = vanilla.createStore ?? vanilla.default ?? vanilla
-          const store = createStore(zusound(() => ({ count: 0 }), { enabled: false }))
-          const instance = createZusound({ enabled: false })
-          const unsubscribe = store.subscribe(instance)
-          unsubscribe()
-          instance.cleanup()
-          if (typeof version !== 'string' || version.length === 0) process.exit(1)
-          EOF
-          node smoke.cjs
-
-          cat > smoke.ts <<'EOF'
-          import type { StateCreator } from 'zustand/vanilla'
-          import { createZusound, version, zusound } from 'zusound'
-
-          type State = { count: number }
-          const initializer: StateCreator<State, [], []> = () => ({ count: 0 })
-          const enhanced: StateCreator<State, [], []> = zusound(initializer, { enabled: false })
-          const subscriber = createZusound({ enabled: false })
-          const listener: (state: State, previousState: State) => void = subscriber
-
-          void enhanced
-          void listener
-          void version
-          subscriber.cleanup()
-          EOF
-
-          cat > tsconfig.json <<'EOF'
-          {
-            "compilerOptions": {
-              "target": "ES2020",
-              "module": "NodeNext",
-              "moduleResolution": "NodeNext",
-              "strict": true,
-              "noEmit": true,
-              "skipLibCheck": false
-            },
-            "include": ["smoke.ts"]
-          }
-          EOF
-          ./node_modules/.bin/tsc -p tsconfig.json
+      - name: Verify packed consumer
+        run: pnpm consumer:check ${{ matrix.zustand-version }}

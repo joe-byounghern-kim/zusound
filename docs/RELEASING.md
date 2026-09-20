@@ -14,8 +14,13 @@ Local or manual `pnpm version-packages` runs use `@changesets/changelog-github` 
 
 ```bash
 pnpm verify
+pnpm consumer:check 4.0.0
+pnpm consumer:check 4.5.7
+pnpm consumer:check 5.0.14
 pnpm release:auto:dry-run
 ```
+
+The consumer checks install the actual package tarball in isolated temporary projects. All three versions must pass ESM, CommonJS, and strict TypeScript checks. Run the quality matrix on Node 22.22.2 and 24.19.0, and keep browser smoke evidence separate from any human listening confirmation.
 
 Confirm CI quality, package validation, Zustand compatibility, release check, and demo deployment checks are green.
 
