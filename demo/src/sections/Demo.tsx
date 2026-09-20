@@ -15,32 +15,51 @@ function timeStr(): string {
 }
 
 const MIDDLEWARE_SNIPPET = `import { create } from 'zustand'
+import type { StateCreator } from 'zustand/vanilla'
 import { zusound } from 'zusound'
 
-const useStore = create(
-  zusound(
-    (set) => ({
-      count: 0,
-      increment: () => set((s) => ({ count: s.count + 1 })),
-    }),
-    { volume: 0.3, debounceMs: 50 }
-  )
-)`
+type CounterState = {
+  count: number
+  increment: () => void
+}
 
-const SUBSCRIBER_SNIPPET = `import { create } from 'zustand'
+const counterState: StateCreator<CounterState, [], []> = (set) => ({
+  count: 0,
+  increment: () => set((state) => ({ count: state.count + 1 })),
+})
+
+const enhancedCounterState = zusound(counterState, {
+  enabled: true,
+  volume: 0.2,
+  debounceMs: 50,
+})
+
+export const useStore = create<CounterState>()(enhancedCounterState)
+
+export function disposeStore(): void {
+  useStore.zusoundCleanup()
+}`
+
+const SUBSCRIBER_SNIPPET = `import { createStore } from 'zustand/vanilla'
 import { createZusound } from 'zusound'
 
-const useStore = create((set) => ({
+type CounterState = {
+  count: number
+  increment: () => void
+}
+
+const store = createStore<CounterState>()((set) => ({
   count: 0,
-  increment: () => set((s) => ({ count: s.count + 1 })),
+  increment: () => set((state) => ({ count: state.count + 1 })),
 }))
 
-const instance = createZusound({ volume: 0.3 })
-const unsub = useStore.subscribe(instance)
+const zs = createZusound({ enabled: true, volume: 0.2, debounceMs: 50 })
+const unsubscribe = store.subscribe(zs)
 
-// Cleanup when done
-unsub()
-instance.cleanup()`
+export function disposeSubscriberAttachment(): void {
+  unsubscribe()
+  zs.cleanup()
+}`
 
 // Stable reference to store actions (functions are stable across Zustand state updates)
 const storeActions = useSubscriberStore.getState()
