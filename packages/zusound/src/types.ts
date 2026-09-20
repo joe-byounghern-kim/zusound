@@ -5,15 +5,14 @@
  * used across the middleware, adapter, and audio subsystems.
  */
 
-import type { StateCreator, StoreApi, StoreMutatorIdentifier } from 'zustand/vanilla'
+import type { StateCreator, StoreMutatorIdentifier } from 'zustand/vanilla'
 
+type Cast<T, U> = T extends U ? T : U
 type Write<T, U> = Omit<T, keyof U> & U
-
-type WithZusoundCleanup<S> = S extends StoreApi<unknown> ? Write<S, ZusoundApi> : S & ZusoundApi
 
 declare module 'zustand/vanilla' {
   interface StoreMutators<S, A> {
-    'zusound/cleanup': [A] extends [unknown] ? WithZusoundCleanup<S> : never
+    'zusound/cleanup': [A] extends [unknown] ? Write<Cast<S, object>, ZusoundApi> : never
   }
 }
 
