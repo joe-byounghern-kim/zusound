@@ -75,3 +75,47 @@ export function rollbackSubscriberPilot(): void {
 ```
 
 After `rollbackSubscriberPilot()`, remove the two attachment declarations. The store itself remains unchanged.
+
+## React StrictMode subscriber pilot
+
+Keep an existing `devtools(persist(...))` store unchanged and attach audio in an effect. Every effect setup creates a fresh instance because cleanup makes the previous instance terminal.
+
+```tsx
+import { useEffect } from 'react'
+import { createStore } from 'zustand/vanilla'
+import { devtools, persist } from 'zustand/middleware'
+import { createZusound } from 'zusound'
+
+type CartState = {
+  itemCount: number
+  addItem: () => void
+}
+
+const cartStore = createStore<CartState>()(
+  devtools(
+    persist(
+      (set) => ({
+        itemCount: 0,
+        addItem: () => set((state) => ({ itemCount: state.itemCount + 1 })),
+      }),
+      { name: 'cart' }
+    )
+  )
+)
+
+export function CartSoundAttachment(): null {
+  useEffect(() => {
+    const zs = createZusound({ enabled: true, volume: 0.15 })
+    const unsubscribe = cartStore.subscribe(zs)
+
+    return () => {
+      unsubscribe()
+      zs.cleanup()
+    }
+  }, [])
+
+  return null
+}
+```
+
+In development StrictMode, setup-cleanup-setup creates and disposes one attachment, then creates a new one. Roll back by allowing cleanup to run and removing `CartSoundAttachment` and its render/import. The persisted and devtools store needs no initializer rollback.

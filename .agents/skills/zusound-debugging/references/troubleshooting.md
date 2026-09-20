@@ -2,6 +2,8 @@
 
 ## No audio ever
 
+An update triggered during mount is not an audible-playback reproduction. It can run before browser activation while the audio context is suspended. Confirm its state result, then reproduce with a direct click or tap that invokes the same known action.
+
 1. **Disabled environment:** inspect the final options. Set `enabled: true` only for the development reproduction. Production and unknown environments default off.
 2. **Suspended context:** use a direct click or tap that invokes the known store action, then retry. Check browser and device mute settings after the state action is confirmed.
 3. **Incorrect wiring:** middleware must wrap the initializer. Subscriber mode must call `store.subscribe(zs)` with a fresh instance that has not been cleaned up.

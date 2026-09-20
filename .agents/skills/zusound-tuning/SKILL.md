@@ -21,14 +21,15 @@ See [parameter profiles and units](references/config-examples.md) and [compatibi
 
 ## Tuning loop
 
-1. Change one parameter group per pass:
+1. Validate global `volume` before listening. Reject values outside `0..1`, including `1.5`, and begin from the low-volume baseline of `0.1`. Do not assume the global option is clamped for you.
+2. Change one parameter group per pass:
    - **Dynamics:** `volume`, then `debounceMs`.
    - **Character:** `pleasantness`, `brightness`, and `valence`.
    - **Motion:** `arousal`, `simultaneity`, and duration.
    - **Path override:** one `soundMapping` entry only after the base profile is understood.
-2. Repeat the exact gesture scenario and record the option delta, automatic state result, and human listening result.
-3. Keep a candidate only if it improves the defined goal without changing application state behavior.
-4. Use `performanceMode` only as a separately compared throughput setting.
+3. Repeat the exact gesture scenario and record the option delta, automatic state result, and human listening result.
+4. Keep a candidate only if it improves the defined goal without changing application state behavior.
+5. Use `performanceMode` only as a separately compared throughput setting.
 
 `AestheticParams.duration` is seconds. `soundMapping[path].duration` is milliseconds. See the unit-safe example before editing either value.
 

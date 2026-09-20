@@ -10,4 +10,4 @@
 
 ## Roll back safely
 
-For middleware, remove `zusound(...)` and its `zusoundCleanup()` call. For subscriber mode, call `unsubscribe()` and `zs.cleanup()`, then remove the attachment. Re-run the consumer application's typecheck, relevant tests, and build.
+For middleware, remove `zusound(...)` and its `zusoundCleanup()` call. For subscriber mode, call `unsubscribe()` and `zs.cleanup()`, then remove the attachment. Re-run the consumer application's typecheck, relevant tests, and build. If no remaining store uses Zusound, uninstall `zusound` with the same package manager that installed it.

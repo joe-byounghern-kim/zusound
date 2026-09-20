@@ -31,7 +31,7 @@ See [compatibility and lifecycle](references/compatibility.md) and choose the ma
 
 ## Stop and rollback
 
-Stop when one known post-gesture update passes the application's automatic checks, a human listener has recorded any listening result separately, and teardown is present. If the integration causes a regression, remove the `zusound(...)` wrapper or subscriber attachment, remove its cleanup call, and rerun the same application checks. See [troubleshooting](references/troubleshooting.md) before escalating a no-audio report.
+Stop when one known post-gesture update passes the application's automatic checks, a human listener has recorded any listening result separately, and teardown is present. If the integration causes a regression, remove the `zusound(...)` wrapper or subscriber attachment, remove its cleanup call, and rerun the same application checks. If the package is no longer used anywhere in the consumer application, uninstall `zusound` with that application's package manager. See [troubleshooting](references/troubleshooting.md) before escalating a no-audio report.
 
 ## Evidence to record
 
