@@ -12,6 +12,7 @@ import { clamp01, lerp, midiToHz } from './math'
 import { createTimbreWave } from './synthesis'
 import { mapPleasantnessToIntervalContinuous } from './dissonance'
 import { scheduleAudioTask, stopAudioScheduler } from './scheduler'
+import { reportError } from './errors'
 
 /** Shared AudioContext instance, lazily created on first playback. */
 let audioContext: AudioContext | null = null
@@ -327,7 +328,7 @@ export async function playSound(
     try {
       await ctx.resume()
     } catch (error) {
-      options?.onError?.(error, { stage: 'audio-resume', change })
+      reportError(error, { stage: 'audio-resume', change }, options?.onError)
       return
     }
   }

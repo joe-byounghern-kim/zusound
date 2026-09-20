@@ -26,7 +26,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "knip": "knip --reporter compact",
-    "lint": "eslint eslint.config.js scripts --max-warnings=0 && turbo run lint",
+    "lint": "eslint eslint.config.js scripts examples/consumer --max-warnings=0 && turbo run lint",
     "prepare": "husky",
     "readme:check": "node scripts/sync-readme.mjs --check",
     "readme:sync": "node scripts/sync-readme.mjs",
@@ -46,8 +46,11 @@
     "test:coverage": "turbo run test:coverage",
     "test:watch": "turbo run test:watch",
     "typecheck": "turbo run typecheck",
-    "verify": "pnpm format:check && pnpm security:check && pnpm deps:check && pnpm docs:check && pnpm skills:validate && pnpm knip && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm package:check",
-    "version-packages": "changeset version"
+    "verify": "pnpm format:check && pnpm security:check && pnpm deps:check && pnpm docs:check && pnpm test:tooling && pnpm skills:validate && pnpm knip && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm examples:check && pnpm package:check",
+    "version-packages": "changeset version",
+    "examples:check": "pnpm -C packages/zusound build && node scripts/check-examples.mjs",
+    "consumer:check": "pnpm -C packages/zusound build && node scripts/check-consumer.mjs",
+    "test:tooling": "node --test scripts/*.test.mjs"
   },
   "devDependencies": {
     "@action-validator/cli": "^0.6.0",

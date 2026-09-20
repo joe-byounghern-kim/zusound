@@ -209,6 +209,38 @@ describe('audio playback', () => {
     })
   })
 
+  it('does not reject when a resume diagnostic callback throws', async () => {
+    const { ctx } = setupMockAudioContext()
+    ctx.state = 'suspended'
+    ctx.resume = vi.fn().mockRejectedValue(new Error('blocked'))
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => undefined)
+    const onError = vi.fn(() => {
+      throw new Error('telemetry failed')
+    })
+
+    try {
+      await expect(
+        playSound(
+          {
+            path: 'count',
+            operation: 'update',
+            valueType: 'number',
+            newValue: 1,
+            oldValue: 0,
+          },
+          { onError }
+        )
+      ).resolves.toBeUndefined()
+      expect(onError).toHaveBeenCalledTimes(1)
+      expect(onError).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.objectContaining({ stage: 'audio-resume' })
+      )
+    } finally {
+      debugSpy.mockRestore()
+    }
+  })
+
   it('recreates audio context after cleaning up a previously closed context', async () => {
     const closedRun = setupMockAudioContext()
     closedRun.ctx.state = 'closed'

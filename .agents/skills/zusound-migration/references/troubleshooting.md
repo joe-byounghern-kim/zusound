@@ -1,15 +1,17 @@
-# Troubleshooting
+# Pilot recovery
 
-## Pilot passes, expanded rollout fails
+## Typecheck fails after wrapping the store
 
-- Compare option drift between pilot and expanded stores.
-- Revert expanded stores and restore pilot-only scope.
+Restore the original middleware order and verify that the consumer supports Zustand `>=4.0.0 <6.0.0`. For an earliest Zustand 4 consumer, preserve its default import style. Do not bypass declaration errors with casts or `skipLibCheck`.
 
-## Middleware interaction regressions
+## State behavior differs
 
-- Confirm middleware order did not change unexpectedly.
-- Isolate Zusound by testing one store with minimal middleware stack.
+Compare the saved baseline action with the pilot action. Preserve immutable top-level updates and existing devtools action names. Revert to the baseline initializer if state behavior is not identical.
 
-## Rollback uncertainty
+## Cleanup is unclear
 
-- Require explicit rollback command/code path before moving to next phase.
+Do not expand the pilot. Middleware must expose and call `store.zusoundCleanup()`. A subscriber pilot needs both its `unsubscribe()` and its particular instance `zs.cleanup()`. One does not replace the other.
+
+## Rollback check
+
+Restore the baseline initializer or execute the subscriber rollback, then rerun the consumer's original typecheck, focused tests, and build. Record the result before trying another store.

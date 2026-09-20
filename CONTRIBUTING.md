@@ -25,7 +25,12 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm test:coverage
+pnpm test:tooling
 pnpm build
+pnpm examples:check
+pnpm consumer:check 4.0.0
+pnpm consumer:check 4.5.7
+pnpm consumer:check 5.0.14
 pnpm demo:dev
 pnpm format:check
 pnpm security:check
@@ -37,6 +42,8 @@ pnpm knip
 pnpm package:check
 pnpm verify
 ```
+
+`examples:check` compiles each TypeScript example in the public READMEs and canonical Skills as an independent strict module against the built package. Keep examples self-contained, including imports and state types. `consumer:check` builds and packs the library, installs it in a temporary project with the requested Zustand version, and checks ESM, CommonJS, and strict TypeScript usage. It requires registry access and never publishes the package.
 
 ## Intentional dependency constraints
 

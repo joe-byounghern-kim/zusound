@@ -13,9 +13,11 @@ import type {
   ZusoundInstance,
   ZusoundOptions,
 } from './types'
+import { createChangeBuffer } from './changes'
 import { MAX_STAGGER_SECONDS, STAGGER_SECONDS } from './constants'
 import { detectChanges } from './differ'
 import { playSound, releaseAudioEngine, retainAudioEngine } from './audio'
+import { reportError } from './errors'
 import { resolveDefaultEnabled } from './env'
 import type { StateCreator } from 'zustand/vanilla'
 
@@ -24,17 +26,6 @@ type EmitChangesOptions = Pick<
   'volume' | 'soundMapping' | 'aesthetics' | 'mapChangeToAesthetics' | 'performanceMode' | 'onError'
 > & {
   isPlaybackActive?: () => boolean
-}
-
-/** Deduplicate pending changes by path, keeping only the latest per path. */
-function deduplicateByPath(changes: Change[]): Change[] {
-  const latestByPath = new Map<string, Change>()
-  for (let i = changes.length - 1; i >= 0; i--) {
-    const change = changes[i]
-    if (latestByPath.has(change.path)) continue
-    latestByPath.set(change.path, change)
-  }
-  return [...latestByPath.values()].reverse()
 }
 
 /** Play sounds for a batch of changes, staggering onset times. */
@@ -63,7 +54,7 @@ function emitChanges(changes: Change[], options: EmitChangesOptions): void {
       startOffset: Math.min(i * STAGGER_SECONDS, MAX_STAGGER_SECONDS),
       isPlaybackActive,
     }).catch((error) => {
-      onError?.(error, { stage: 'playback', change })
+      reportError(error, { stage: 'playback', change }, onError)
       console.debug('Zusound: Audio playback failed', error)
     })
   }
@@ -147,7 +138,7 @@ export function attachZusound<TState>(
   retainAudioEngine()
 
   let debounceTimer: ReturnType<typeof setTimeout> | null = null
-  let pendingChanges: Change[] = []
+  const pendingChanges = createChangeBuffer()
   let cleanedUp = false
 
   let unsubscribe: ZusoundHandle['cleanup']
@@ -159,13 +150,12 @@ export function attachZusound<TState>(
         const changes = detectChanges(currentState, prevState)
 
         if (debounceMs > 0) {
-          pendingChanges.push(...changes)
+          pendingChanges.add(changes)
 
           if (debounceTimer) clearTimeout(debounceTimer)
           debounceTimer = setTimeout(() => {
             if (cleanedUp) return
-            const flushed = deduplicateByPath(pendingChanges)
-            pendingChanges = []
+            const flushed = pendingChanges.flush()
             debounceTimer = null
             emitChanges(flushed, {
               volume,
@@ -189,13 +179,13 @@ export function attachZusound<TState>(
           })
         }
       } catch (error) {
-        onError?.(error, { stage: 'state-change-processing' })
+        reportError(error, { stage: 'state-change-processing' }, onError)
         console.warn('Zusound: Error processing state change', error)
       }
     })
   } catch (error) {
     releaseAudioEngine()
-    onError?.(error, { stage: 'state-change-processing' })
+    reportError(error, { stage: 'state-change-processing' }, onError)
     console.warn('Zusound: Failed to attach subscription', error)
     adapter.attachCleanup?.(cleanup)
     return { cleanup }
@@ -209,7 +199,7 @@ export function attachZusound<TState>(
       clearTimeout(debounceTimer)
       debounceTimer = null
     }
-    pendingChanges = []
+    pendingChanges.clear()
     try {
       unsubscribe()
     } finally {
@@ -232,7 +222,7 @@ export function attachZusound<TState>(
  */
 export function createZusound(baseOptions: ZusoundOptions = {}): ZusoundInstance {
   let debounceTimer: ReturnType<typeof setTimeout> | null = null
-  let pendingChanges: Change[] = []
+  const pendingChanges = createChangeBuffer()
   let cleanedUp = false
   let retainedSubscriberAudio = false
 
@@ -244,7 +234,7 @@ export function createZusound(baseOptions: ZusoundOptions = {}): ZusoundInstance
       clearTimeout(debounceTimer)
       debounceTimer = null
     }
-    pendingChanges = []
+    pendingChanges.clear()
 
     if (retainedSubscriberAudio) {
       releaseAudioEngine()
@@ -306,13 +296,12 @@ export function createZusound(baseOptions: ZusoundOptions = {}): ZusoundInstance
       const changes = detectChanges(currentState, prevState)
 
       if ((options.debounceMs ?? 0) > 0) {
-        pendingChanges.push(...changes)
+        pendingChanges.add(changes)
 
         if (debounceTimer) clearTimeout(debounceTimer)
         debounceTimer = setTimeout(() => {
           if (cleanedUp) return
-          const flushed = deduplicateByPath(pendingChanges)
-          pendingChanges = []
+          const flushed = pendingChanges.flush()
           debounceTimer = null
           emitChanges(flushed, {
             ...options,
@@ -326,7 +315,7 @@ export function createZusound(baseOptions: ZusoundOptions = {}): ZusoundInstance
         })
       }
     } catch (error) {
-      options.onError?.(error, { stage: 'state-change-processing' })
+      reportError(error, { stage: 'state-change-processing' }, options.onError)
       console.warn('Zusound: Error processing state change', error)
     }
 
@@ -335,5 +324,5 @@ export function createZusound(baseOptions: ZusoundOptions = {}): ZusoundInstance
 
   instance.cleanup = cleanup
 
-  return instance
+  return instance as ZusoundInstance
 }

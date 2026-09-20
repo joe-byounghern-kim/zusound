@@ -9,6 +9,7 @@
       "ignoreDependencies": ["@bugron/validate-dependabot-yaml"]
     },
     "packages/zusound": {
+      "entry": ["__tests__/middleware-types.ts"],
       "project": ["src/**/*.ts", "__tests__/**/*.ts", "*.config.ts"]
     },
     "demo": {

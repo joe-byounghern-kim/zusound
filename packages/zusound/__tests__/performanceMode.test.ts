@@ -53,7 +53,7 @@ describe('performanceMode integration', () => {
       value: audioContextConstructor,
     })
 
-    const store = createStore<CounterState>(
+    const store = createStore<CounterState>()(
       zusound(
         (set) => ({
           count: 0,

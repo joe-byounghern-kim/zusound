@@ -1,48 +1,36 @@
 ---
 name: zusound-debugging
-description: Diagnose Zusound failures through symptom-first checks, branch decisions, and deterministic remediation steps.
+description: Use when Zusound feedback is missing, excessive, delayed, or incorrectly mapped and needs browser-gesture and lifecycle diagnosis.
+compatibility: Zustand >=4.0.0 <6.0.0. Designed for the upcoming Zusound v0.3.0 lifecycle guidance.
 ---
 
 # Zusound Debugging
 
-## When To Use
+## Use when
 
-- Audio feedback is missing, unstable, or unexpectedly frequent.
-- A user needs a shortest-path diagnosis before deeper tuning or migration.
+Use when optional audio feedback is missing, delayed, too frequent, or has an unexpected character. Start with a reproducible browser action rather than broad logging or arbitrary tuning.
 
-## Inputs Required
+## Gather
 
-- Symptom summary (no sound, delayed sound, distorted behavior, burst spam).
-- Integration mode (middleware or subscriber).
-- Runtime context (dev/prod, browser environment, user interaction state).
+- The exact store action and expected top-level key change.
+- Middleware or subscriber integration mode, options, and teardown location.
+- Browser, environment, whether a direct gesture occurred, and the consumer application's actual typecheck, test, and build commands.
 
 ## Procedure
 
-1. Classify symptom:
-   - A: no sound ever
-   - B: only first event fails
-   - C: too many events
-   - D: wrong mood/character
-2. Run branch checks in order:
-   - Environment gate (`enabled`, production safety, user gesture unlock).
-   - Wiring gate (store wrap/subscribe path, lifecycle cleanup).
-   - Throughput gate (debounce and update frequency).
-   - Mapping gate (`mapChangeToAesthetics`, `soundMapping` collisions).
-3. Apply one remediation at a time and rerun the same symptom trigger.
-4. Record successful fix path and final configuration.
+1. Reproduce with one click or tap that executes the known action and confirm the visible or stored state update first.
+2. Follow the symptom branch in [troubleshooting](references/troubleshooting.md), in order: environment, browser activation, wiring and lifecycle, detected change, throughput, then mapping.
+3. Change only one option or integration fact per attempt. Re-run the same gesture and store action after every change.
+4. Use [configuration examples](references/config-examples.md) only to make a minimal diagnostic configuration. Keep app options and telemetry free of secrets.
+5. Once automatic behavior is correct, record human listening feedback separately. A passing test, mock, or `onError` callback does not prove audible playback.
+6. Run the consumer's actual typecheck, focused tests, and build after the fix.
 
-## Stop Conditions
+## Stop and rollback
 
-- Stop when symptom is resolved and repro no longer fails.
-- Escalate when all branches pass but symptom persists.
-
-## Verification
-
-- `pnpm skills:validate`
-- `pnpm skills:bridge`
+Stop when the expected top-level change, selected branch result, lifecycle state, and application checks are documented. Roll back the last configuration or wiring change if it makes the trigger worse. Remove the audio wrapper or subscriber attachment if diagnosis must be deferred.
 
 ## References
 
-- `references/compatibility.md`
-- `references/config-examples.md`
-- `references/troubleshooting.md`
+- [Compatibility and ownership](references/compatibility.md)
+- [Minimal diagnostic configurations](references/config-examples.md)
+- [Symptom branches](references/troubleshooting.md)
