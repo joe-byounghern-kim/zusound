@@ -5,7 +5,16 @@
  * used across the middleware, adapter, and audio subsystems.
  */
 
-import type { StateCreator } from 'zustand/vanilla'
+import type { StateCreator, StoreMutatorIdentifier } from 'zustand/vanilla'
+
+type Cast<T, U> = T extends U ? T : U
+type Write<T, U> = Omit<T, keyof U> & U
+
+declare module 'zustand/vanilla' {
+  interface StoreMutators<S, A> {
+    'zusound/cleanup': [A] extends [unknown] ? Write<Cast<S, object>, ZusoundApi> : never
+  }
+}
 
 /**
  * Aesthetic parameters that control how a state change sounds.
@@ -45,7 +54,7 @@ export interface ZusoundOptions {
   soundMapping?: Record<string, Partial<SoundParams>>
   /** Base aesthetic tuning applied to all changes. */
   aesthetics?: Partial<AestheticParams>
-  /** Per-change dynamic aesthetic override hook. Called for every detected change. */
+  /** Per-change dynamic aesthetic override hook, called for each change selected for playback. */
   mapChangeToAesthetics?: (change: Change) => Partial<AestheticParams>
   /** Use static consonance ranking to reduce dissonance computation cost. */
   performanceMode?: boolean
@@ -129,10 +138,15 @@ export type ZusoundSubscriber<TState> = (currentState: TState, prevState: TState
  */
 export interface ZusoundInstance {
   /** Middleware mode: wraps a Zustand state creator. */
-  <T extends object>(
-    initializer: StateCreator<T, [], []>,
+  <
+    T extends object,
+    Mis extends [StoreMutatorIdentifier, unknown][] = [],
+    Mos extends [StoreMutatorIdentifier, unknown][] = [],
+    U = T,
+  >(
+    initializer: StateCreator<T, Mis, Mos, U>,
     options?: ZusoundOptions
-  ): StateCreator<T, [], []>
+  ): StateCreator<T, Mis, [['zusound/cleanup', never], ...Mos], U>
   /** Subscriber mode: called with (currentState, prevState) on each store update. */
   <T>(currentState: T, prevState: T): void
   /** Release audio resources held by this instance. */

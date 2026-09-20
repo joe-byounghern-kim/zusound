@@ -1,22 +1,37 @@
-# Configuration Examples
-
-## Add non-fatal error telemetry
+# Minimal diagnostic configuration
 
 ```typescript
-const zs = createZusound({
+import { createStore } from 'zustand/vanilla'
+import { createZusound, type ZusoundOptions } from 'zusound'
+
+type CounterState = {
+  count: number
+  increment: () => void
+}
+
+const options: ZusoundOptions = {
   enabled: true,
-  onError: (error, context) => {
-    console.warn('[zusound]', context, error)
-  },
-})
+  volume: 0.1,
+  debounceMs: 0,
+  onError: (error, context) => console.warn('Zusound diagnostic', context.stage, error),
+}
 
+const store = createStore<CounterState>()((set) => ({
+  count: 0,
+  increment: () => set((state) => ({ count: state.count + 1 })),
+}))
+
+const zs = createZusound(options)
 const unsubscribe = store.subscribe(zs)
+
+export function triggerFromUserGesture(): void {
+  store.getState().increment()
+}
+
+export function disposeDiagnosticAttachment(): void {
+  unsubscribe()
+  zs.cleanup()
+}
 ```
 
-## Minimal symptom repro harness
-
-```typescript
-store.getState().inc()
-store.getState().inc()
-store.getState().inc()
-```
+This configuration makes the lifecycle and error boundary observable. It does not establish that audio was audible.

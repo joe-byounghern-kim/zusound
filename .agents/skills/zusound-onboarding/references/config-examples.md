@@ -1,28 +1,56 @@
-# Configuration Examples
+# Configuration examples
 
-## Middleware integration
+## Middleware choice
 
 ```typescript
 import { create } from 'zustand'
+import type { StateCreator } from 'zustand/vanilla'
 import { zusound } from 'zusound'
 
-export const useStore = create(
-  zusound((set) => ({
-    count: 0,
-    inc: () => set((state) => ({ count: state.count + 1 })),
-  }))
-)
+type CounterState = {
+  count: number
+  increment: () => void
+}
+
+const counterState: StateCreator<CounterState, [], []> = (set) => ({
+  count: 0,
+  increment: () => set((state) => ({ count: state.count + 1 })),
+})
+
+const enhancedCounterState = zusound(counterState, { enabled: true, volume: 0.2 })
+
+export const useCounterStore = create<CounterState>()(enhancedCounterState)
+
+export function disposeCounterStore(): void {
+  useCounterStore.zusoundCleanup()
+}
 ```
 
-## Subscriber integration with explicit cleanup
+Choose this when the store has a permanent disposal boundary.
+
+## Subscriber choice
 
 ```typescript
+import { createStore } from 'zustand/vanilla'
 import { createZusound } from 'zusound'
 
-const zs = createZusound({ enabled: true, volume: 0.3, debounceMs: 40 })
+type CounterState = {
+  count: number
+  increment: () => void
+}
+
+const store = createStore<CounterState>()((set) => ({
+  count: 0,
+  increment: () => set((state) => ({ count: state.count + 1 })),
+}))
+
+const zs = createZusound({ enabled: true, volume: 0.2 })
 const unsubscribe = store.subscribe(zs)
 
-// teardown
-unsubscribe()
-zs.cleanup()
+export function disposeAttachment(): void {
+  unsubscribe()
+  zs.cleanup()
+}
 ```
+
+Choose this when the attachment has an explicit owner. Do not reuse `zs` after `disposeAttachment()`.
