@@ -1,24 +1,21 @@
-# ZuSound Agent Skills
+# Zusound Consumer Skills
 
-Canonical reusable skills live in `.agents/skills/zusound-onboarding/`; the other skill IDs use the same directory layout.
+The canonical consumer-facing Skills are in `.agents/skills/`:
 
-Each skill contains:
+- [Onboarding](skills/zusound-onboarding/SKILL.md)
+- [Debugging](skills/zusound-debugging/SKILL.md)
+- [Migration](skills/zusound-migration/SKILL.md)
+- [Tuning](skills/zusound-tuning/SKILL.md)
 
-- `SKILL.md` with `name` and `description` frontmatter
-- one or more `references/*.md` files
+Each Skill tells an agent to inspect the **consumer application** first, use one reproducible browser update, run that application's actual typecheck, tests, and build, and keep audio listening evidence separate from automated evidence. They support Zustand `>=4.0.0 <6.0.0` and the upcoming v0.3.0 lifecycle guidance.
 
-Current skills:
+## Maintainer guidance
 
-- `zusound-onboarding`
-- `zusound-tuning`
-- `zusound-debugging`
-- `zusound-migration`
-
-Validate and generate the local Claude bridge with:
+Validate canonical Skill structure and generate the local bridge only when maintaining this repository:
 
 ```bash
 pnpm skills:validate
 pnpm skills:bridge
 ```
 
-`.claude/skills/` is generated local output and must not be committed. Do not include secrets, personal data, absolute machine paths, or unreproducible tooling assumptions in canonical skill files.
+`.claude/skills/` is generated local output and must remain untracked. Consumer projects should not use these repository commands as integration verification.

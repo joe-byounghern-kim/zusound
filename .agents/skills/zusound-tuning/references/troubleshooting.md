@@ -1,16 +1,17 @@
-# Troubleshooting
+# Tuning recovery
 
-## Output is too harsh or chaotic
+## Cues are too dense
 
-- Increase `pleasantness` and reduce `brightness`.
-- Raise `debounceMs` if bursts are too dense.
+First check for duplicate subscriptions or update loops. Then raise `debounceMs` in milliseconds and repeat the fixed scenario. Do not use debounce as a substitute for repairing an unintended update loop.
 
-## Output is too dull or hard to notice
+## Cues are too faint or harsh
 
-- Increase `volume`, then `arousal`.
-- Lower `debounceMs` carefully and retest.
+Adjust one group only. Start with global `volume`, then character controls such as `pleasantness` and `brightness`, then motion controls. Restore the previous profile if the listener cannot identify a clear improvement.
 
-## Contradictory tuning results
+## Duration changed unexpectedly
 
-- Revert to baseline.
-- Apply one parameter-group change per pass and rerun the same scenario.
+Check units before changing values: `AestheticParams.duration` is seconds and `soundMapping[path].duration` is milliseconds. A path mapping wins last for that path.
+
+## Automated checks pass but listening is inconclusive
+
+Record automatic success as state and lifecycle evidence only. Keep the old profile or disable optional feedback until a listener can evaluate the same fixed scenario.

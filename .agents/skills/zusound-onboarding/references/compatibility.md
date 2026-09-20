@@ -1,6 +1,8 @@
-# Compatibility Notes
+# Compatibility and lifecycle
 
-- Zusound supports Zustand `>=4 <6`.
-- Default behavior is safe for production: audio is disabled unless explicitly enabled.
-- Browser autoplay policies can keep `AudioContext` suspended until user interaction.
-- Canonical skill source is `.agents/skills/`; `.claude/skills/` is generated output.
+- Use Zustand `>=4.0.0 <6.0.0`.
+- Production and unknown environments default to audio off. During development, specify `enabled: true` when the test outcome matters.
+- Importing Zusound is SSR-safe. Create browser-only subscriber attachments in a client lifecycle boundary. An SSR-created store can use `{ enabled: false }` until client activation.
+- Middleware stores own `store.zusoundCleanup()`. Subscriber attachments own both `unsubscribe()` and `zs.cleanup()`. Instance cleanup does not detach middleware stores.
+- A subscriber instance is terminal after `cleanup()`. Create a fresh `createZusound()` instance for a new attachment.
+- Browsers can require a click or tap before audio resumes. Automated checks can verify the state update and lifecycle, but a person must report whether optional audio was audible.

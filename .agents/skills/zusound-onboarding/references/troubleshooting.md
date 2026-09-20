@@ -1,16 +1,13 @@
-# Troubleshooting
+# First-integration recovery
 
-## No sound on first action
+## A click changed state but there was no optional audio
 
-- Trigger a direct user interaction first (click/tap), then retry.
-- Check browser tab permission and muted device output.
+1. Confirm the same browser click or tap executes the known action and visibly changes state.
+2. Confirm `{ enabled: true }` is present for the development check.
+3. Repeat the direct gesture once. Browser activation can suspend audio before interaction.
+4. Confirm the selected integration still exists and has not already been cleaned up.
+5. Continue with the [debugging Skill](../../zusound-debugging/SKILL.md) if these checks do not isolate the issue.
 
-## No sound in production
+## Roll back safely
 
-- Expected unless `enabled: true` is set.
-- Verify environment classification and explicit option flow.
-
-## Sound fires too often
-
-- Increase `debounceMs`.
-- Verify repeated state updates are not accidental loops.
+For middleware, remove `zusound(...)` and its `zusoundCleanup()` call. For subscriber mode, call `unsubscribe()` and `zs.cleanup()`, then remove the attachment. Re-run the consumer application's typecheck, relevant tests, and build.

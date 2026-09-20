@@ -1,44 +1,43 @@
 ---
 name: zusound-tuning
-description: Tune Zusound aesthetics and playback behavior with a repeatable calibration loop and measurable checkpoints.
+description: Use when a working Zusound integration needs repeatable low-volume tuning, correct duration units, and listening evidence.
+compatibility: Zustand >=4.0.0 <6.0.0. Designed for the upcoming Zusound v0.3.0 lifecycle guidance.
 ---
 
 # Zusound Tuning
 
-## When To Use
+## Use when
 
-- Integration works, but audio behavior feels too noisy, too subtle, or mood-mismatched.
-- A team needs reproducible before/after tuning evidence.
+Use after integration and lifecycle checks pass but the optional cues are too subtle, busy, harsh, or mismatched to the product. Do not tune to compensate for broken wiring or unavailable browser activation.
 
-## Inputs Required
+## Establish a fixed scenario
 
-- Current options (`volume`, `debounceMs`, `aesthetics`, `performanceMode`).
-- Product intent (calm, neutral, energetic, high-alert).
-- One repeatable state-change scenario for A/B comparison.
+1. Choose one direct click or tap that makes one known immutable top-level state update.
+2. Start with `{ enabled: true, volume: 0.1 }` and record the current configuration.
+3. Use the same browser, output device, action count, and debounce window for each comparison.
+4. Confirm the visible state update automatically. Ask a human listener to record listening evidence separately.
 
-## Procedure
+See [parameter profiles and units](references/config-examples.md) and [compatibility notes](references/compatibility.md).
 
-1. Baseline: capture current settings and run one repeatable scenario.
-2. Adjust in bounded sequence:
-   - Dynamics: `volume`, `debounceMs`.
-   - Character: `pleasantness`, `brightness`, `valence`.
-   - Motion: `arousal`, `simultaneity`, optional `duration`.
-3. Change one variable group at a time and compare against baseline.
-4. For high-frequency apps, test with and without `performanceMode`.
-5. Freeze a candidate profile and record why it is preferred.
+## Tuning loop
 
-## Stop Conditions
+1. Change one parameter group per pass:
+   - **Dynamics:** `volume`, then `debounceMs`.
+   - **Character:** `pleasantness`, `brightness`, and `valence`.
+   - **Motion:** `arousal`, `simultaneity`, and duration.
+   - **Path override:** one `soundMapping` entry only after the base profile is understood.
+2. Repeat the exact gesture scenario and record the option delta, automatic state result, and human listening result.
+3. Keep a candidate only if it improves the defined goal without changing application state behavior.
+4. Use `performanceMode` only as a separately compared throughput setting.
 
-- Stop when a selected profile is better than baseline in the same scenario.
-- Stop if contradictory changes appear; roll back to last known good profile.
+`AestheticParams.duration` is seconds. `soundMapping[path].duration` is milliseconds. See the unit-safe example before editing either value.
 
-## Verification
+## Stop and rollback
 
-- `pnpm skills:validate`
-- `pnpm skills:bridge`
+Stop when a documented candidate meets the listening goal in the fixed scenario and consumer typecheck, tests, and build still pass. If results conflict, restore the last recorded configuration and repeat one isolated parameter group. Do not claim that automated checks established audible quality.
 
 ## References
 
-- `references/compatibility.md`
-- `references/config-examples.md`
-- `references/troubleshooting.md`
+- [Compatibility and fixed-scenario rules](references/compatibility.md)
+- [Typed profiles, mapping precedence, and duration units](references/config-examples.md)
+- [Tuning recovery steps](references/troubleshooting.md)
