@@ -21,7 +21,7 @@ Audio is optional feedback. Keep visual status and diagnostics available for eve
 npm install zusound zustand
 ```
 
-Supported Zustand versions: `>=4.0.0 <6.0.0`. The examples use named imports supported by modern Zustand 4 and 5. An application pinned to Zustand 4.0 may need its legacy default `create` and `createStore` imports instead.
+Supported Zustand versions: `>=4.0.0 <6.0.0`. The examples use named imports supported by Zustand `>=4.5` and 5. An application pinned to Zustand 4.0 may need its legacy default `create` and `createStore` imports and the [4.0 ordering exception](#zustand-40-ordering-exception).
 
 <!-- README_SYNC:SECTION_END:install -->
 
@@ -213,6 +213,10 @@ In this example, `aesthetics.duration: 0.16` is seconds. `soundMapping.progress.
 The exact rendered result depends on browser audio support, user activation, output device, and your configuration.
 
 <!-- README_SYNC:SECTION_END:what-youll-hear -->
+
+## Zustand 4.0 ordering exception
+
+Zustand 4.0 requires input-mutator metadata that prevents the modern wrapper order. For exactly 4.0, put Zusound outermost around selector, persist, or devtools middleware. Zustand `>=4.5` and 5 retain the modern recipes. See the [checked 4.0 consumer fixture](examples/consumer/smoke-v4.cts) for the precise legacy forms.
 
 ## Docs Map
 

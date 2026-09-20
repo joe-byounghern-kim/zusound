@@ -12,7 +12,7 @@
 npm install zusound zustand
 ```
 
-Supported Zustand versions: `>=4.0.0 <6.0.0`. The examples use named imports supported by modern Zustand 4 and 5. An application pinned to Zustand 4.0 may need its legacy default `create` and `createStore` imports instead.
+Supported Zustand versions: `>=4.0.0 <6.0.0`. The examples use named imports supported by Zustand `>=4.5` and 5. An application pinned to Zustand 4.0 may need its legacy default `create` and `createStore` imports and the [4.0 ordering exception](#zustand-40-ordering-exception).
 
 <!-- README_SYNC:SECTION_END:install -->
 
@@ -101,6 +101,10 @@ export function disposeSubscriberAudio(): void {
 ## Middleware composition
 
 The following compositions are supported and preserve the store cleanup method. Keep the demonstrated order when applying them. Other middleware combinations should be typechecked and tested in your application before adoption.
+
+### Zustand 4.0 ordering exception
+
+Zustand 4.0 requires input-mutator metadata that prevents the modern wrapper order. In a project pinned to exactly 4.0, put Zusound outermost: `zusound(subscribeWithSelector(initializer))`, `zusound(persist(initializer, options))`, or `zusound(devtools(initializer))`. Zustand `>=4.5` and 5 retain the modern recipes below: `subscribeWithSelector(zusound(initializer))` and `devtools(persist(zusound(initializer)))`. The [checked Zustand 4.0 consumer fixture](../../examples/consumer/smoke-v4.cts) is the source of truth for that legacy case. Do not change ordering solely for this exception on newer versions.
 
 ```typescript
 import { create } from 'zustand'

@@ -21,7 +21,7 @@ See the typed [pilot and rollback examples](references/config-examples.md) and [
 ## Pilot procedure
 
 1. Run the consumer's baseline typecheck, focused tests, and build before changing the store.
-2. Apply the selected pilot integration with development-only explicit enablement and low volume. Preserve the documented middleware order exactly. Keep any `StateCreator<State, [], []>` initializer annotation, assign `const enhanced = zusound(initializer)`, then pass `enhanced` to `create<State>()` or `createStore<State>()` so cleanup typing is inferred.
+2. Apply the selected pilot integration with development-only explicit enablement and low volume. Preserve the documented middleware order exactly. For Zustand 4.0, use the outermost-Zusound order in [composition compatibility](references/compatibility.md) rather than the modern recipe. Keep any `StateCreator<State, [], []>` initializer annotation, assign `const enhanced = zusound(initializer)`, then pass `enhanced` to `create<State>()` or `createStore<State>()` so cleanup typing is inferred.
 3. Confirm that the existing browser action still produces the same visible state and typecheck result. After a direct gesture, collect optional human listening evidence separately.
 4. For middleware, verify `store.zusoundCleanup()` is called at the existing store disposal boundary. For subscribers, verify `unsubscribe()` and `zs.cleanup()` are both called at the attachment boundary.
 5. Run the same consumer typecheck, tests, and build. Expand only after these results and rollback instructions are recorded.

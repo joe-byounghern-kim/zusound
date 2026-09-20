@@ -182,6 +182,14 @@ export function ApiDocs() {
           <strong>Middleware</strong> adds typed store-owned cleanup. <strong>Subscriber</strong>{' '}
           gives an attachment explicit ownership of both unsubscribe and instance cleanup.
         </p>
+        <p style={{ color: 'var(--ink-soft)', margin: '0 0 16px', fontSize: '0.82rem' }}>
+          Zustand 4.0 requires <code>zusound</code> outermost around selector, persist, or devtools
+          middleware. Zustand 4.5 and 5 use the shown ordering. See the{' '}
+          <a href="https://github.com/joe-byounghern-kim/zusound/blob/main/examples/consumer/smoke-v4.cts">
+            checked 4.0 fixture
+          </a>{' '}
+          for the legacy case.
+        </p>
         <div className="api-grid">
           <div>
             <p style={{ fontSize: '0.82rem', fontWeight: 600, marginBottom: 8 }}>
