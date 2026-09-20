@@ -20,6 +20,36 @@ function markdownFiles(directory) {
   })
 }
 
+function extractExamples(markdown, document) {
+  const examples = []
+  let fence = null
+  for (const line of markdown.split(/\r?\n/)) {
+    const marker = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/)
+    if (!fence && marker) {
+      fence = {
+        marker: marker[1],
+        language: marker[2].trim().match(/^(typescript|ts|tsx)(?:\s|$)/)?.[1],
+        lines: [],
+      }
+    } else if (fence) {
+      if (
+        marker &&
+        marker[1][0] === fence.marker[0] &&
+        marker[1].length >= fence.marker.length &&
+        !marker[2].trim()
+      ) {
+        if (fence.language)
+          examples.push({ language: fence.language, code: fence.lines.join('\n') })
+        fence = null
+      } else if (fence.language) {
+        fence.lines.push(line)
+      }
+    }
+  }
+  if (fence?.language) throw new Error(`Unclosed TypeScript fence in ${document}`)
+  return examples
+}
+
 const documents = args.length
   ? [resolve(args[1])]
   : [
@@ -38,13 +68,13 @@ try {
   for (const document of documents) {
     const markdown = readFileSync(document, 'utf8')
     let ordinal = 0
-    for (const match of markdown.matchAll(/^```(typescript|ts|tsx)\s*\n([\s\S]*?)^```\s*$/gm)) {
+    for (const example of extractExamples(markdown, document)) {
       ordinal++
       count++
-      const filename = `example-${count}.${match[1] === 'tsx' ? 'tsx' : 'ts'}`
+      const filename = `example-${count}.${example.language === 'tsx' ? 'tsx' : 'ts'}`
       sources.set(filename, `${relative(root, document)}: example ${ordinal}`)
       // Force module scope so independent copy-paste examples cannot share declarations.
-      writeFileSync(join(directory, filename), `${match[2]}\nexport {}\n`)
+      writeFileSync(join(directory, filename), `${example.code}\nexport {}\n`)
     }
   }
   if (!count) throw new Error('No TypeScript examples found')

@@ -48,3 +48,15 @@ test('fails closed when no TypeScript examples are found', () => {
   assert.equal(result.status, 1)
   assert.match(result.stdout + result.stderr, /No TypeScript examples/)
 })
+
+test('rejects an unclosed TypeScript fence even after a valid example', () => {
+  const result = checkMarkdown('```ts\nconst count = 1\n```\n\n```ts\nconst bad: number = "bad"\n')
+  assert.equal(result.status, 1)
+  assert.match(result.stdout + result.stderr, /Unclosed TypeScript fence/)
+})
+
+test('compiles tilde fences and fences with a title', () => {
+  const result = checkMarkdown('~~~ts title="counter.ts"\nconst count: number = 1\n~~~\n')
+  assert.equal(result.status, 0, result.stdout + result.stderr)
+  assert.match(result.stdout, /1 examples/)
+})
