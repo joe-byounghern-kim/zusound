@@ -46,23 +46,38 @@ try {
   cpSync(join(root, 'examples/consumer'), directory, { recursive: true })
   if (version === '4.0.0') {
     // Zustand 4.0 has a default vanilla factory and stricter input-mutator metadata.
-    writeFileSync(join(directory, 'tsconfig.json'), JSON.stringify({
-      compilerOptions: {
-        target: 'ES2020', module: 'NodeNext', moduleResolution: 'NodeNext', strict: true,
-        noEmit: true, skipLibCheck: false,
-      },
-      include: ['smoke-v4.cts'],
-    }))
+    writeFileSync(
+      join(directory, 'tsconfig.json'),
+      JSON.stringify({
+        compilerOptions: {
+          target: 'ES2020',
+          module: 'NodeNext',
+          moduleResolution: 'NodeNext',
+          strict: true,
+          noEmit: true,
+          skipLibCheck: false,
+        },
+        include: ['smoke-v4.cts'],
+      })
+    )
     execFileSync(process.execPath, ['node_modules/typescript/lib/tsc.js', '-p', 'tsconfig.json'], {
-      cwd: directory, stdio: 'inherit',
+      cwd: directory,
+      stdio: 'inherit',
     })
-    writeFileSync(join(directory, 'tsconfig.json'), JSON.stringify({
-      compilerOptions: {
-        target: 'ES2020', module: 'ESNext', moduleResolution: 'Bundler', strict: true,
-        noEmit: true, skipLibCheck: false,
-      },
-      include: ['smoke-v4.ts'],
-    }))
+    writeFileSync(
+      join(directory, 'tsconfig.json'),
+      JSON.stringify({
+        compilerOptions: {
+          target: 'ES2020',
+          module: 'ESNext',
+          moduleResolution: 'Bundler',
+          strict: true,
+          noEmit: true,
+          skipLibCheck: false,
+        },
+        include: ['smoke-v4.ts'],
+      })
+    )
   } else {
     const smokeSource = readFileSync(join(directory, 'smoke.ts'), 'utf8').replace(
       '// __ZUSOUND_CREATE_STORE_IMPORT__',
