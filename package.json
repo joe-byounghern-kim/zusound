@@ -72,7 +72,7 @@
     "lint-staged": "^17.5.1",
     "prettier": "^3.9.8",
     "publint": "^0.3.24",
-    "turbo": "^2.11.2",
+    "turbo": "^2.11.4",
     "typescript": "^5.9.3"
   },
   "packageManager": "pnpm@11.20.0",
