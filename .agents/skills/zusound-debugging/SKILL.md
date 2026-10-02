@@ -1,7 +1,7 @@
 ---
 name: zusound-debugging
 description: Use when Zusound feedback is missing, excessive, delayed, or incorrectly mapped and needs browser-gesture and lifecycle diagnosis.
-compatibility: Zustand >=4.0.0 <6.0.0. Designed for the upcoming Zusound v0.3.0 lifecycle guidance.
+compatibility: Zustand >=4.0.0 <6.0.0. Browser Web Audio with explicit lifecycle ownership.
 ---
 
 # Zusound Debugging

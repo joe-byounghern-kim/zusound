@@ -1,5 +1,11 @@
 # zusound
 
+## 0.3.1
+
+### Patch Changes
+
+- Simplify onboarding with shorter READMEs and one current API reference. Remove migration guides and replace the demo with immediate, opt-in sound, focused Zustand examples, accurate change history, and copyable current settings. Add real-browser acceptance checks before demo deployment. No public runtime API changes.
+
 ## 0.3.0
 
 ### Minor Changes

@@ -1,28 +1,16 @@
-const LINKS = [
-  { label: 'GitHub', href: 'https://github.com/joe-byounghern-kim/zusound' },
-  { label: 'npm', href: 'https://www.npmjs.com/package/zusound' },
-  {
-    label: 'Quick Start',
-    href: 'https://github.com/joe-byounghern-kim/zusound/blob/main/README.md#quick-usage',
-  },
-  {
-    label: 'Full Docs',
-    href: 'https://github.com/joe-byounghern-kim/zusound/blob/main/packages/zusound/README.md',
-  },
-]
+import { version } from 'zusound'
 
 export function Footer() {
   return (
-    <footer className="site-footer" aria-label="Site footer">
-      <p className="footer-brand">Zusound</p>
-      <nav className="footer-links" aria-label="External resources">
-        {LINKS.map((link) => (
-          <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer">
-            {link.label}
-          </a>
-        ))}
+    <footer className="site-footer">
+      <p>zusound {version} · MIT · Sound is optional.</p>
+      <nav aria-label="More resources">
+        <a href="https://www.npmjs.com/package/zusound">npm</a>
+        <a href="https://github.com/joe-byounghern-kim/zusound/blob/main/README.md#quick-start">
+          Quick start
+        </a>
+        <a href="https://github.com/joe-byounghern-kim/zusound/blob/main/docs/API.md">API</a>
       </nav>
-      <p className="footer-note">Zero dependencies. Auto-disabled in production.</p>
     </footer>
   )
 }
