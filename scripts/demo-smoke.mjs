@@ -114,7 +114,12 @@ async function load(width, height) {
     deviceScaleFactor: 1,
     mobile: width < 600,
   })
+  const loadCount = events.filter((event) => event.method === 'Page.loadEventFired').length
   await cdp('Page.navigate', { url })
+  await waitFor(
+    () => events.filter((event) => event.method === 'Page.loadEventFired').length > loadCount,
+    'new document load'
+  )
   await waitFor(
     () => evaluate('Boolean(document.querySelector("[data-testid=state], .state-display"))'),
     'demo render'
@@ -199,14 +204,18 @@ try {
   await load(390, 844)
   const firstView = await evaluate(`(() => {
     const button = [...document.querySelectorAll('button')].find((button) => /enable (audio|sound)/i.test(button.textContent))
-    return { width: innerWidth, documentWidth: document.documentElement.scrollWidth, height: innerHeight, soundActionBottom: button.getBoundingClientRect().bottom }
+    return { width: innerWidth, contentWidth: document.documentElement.clientWidth, documentWidth: document.documentElement.scrollWidth, height: innerHeight, soundActionBottom: button.getBoundingClientRect().bottom }
   })()`)
   observe('mobile-first-action', firstView)
   assert(
     firstView.soundActionBottom <= firstView.height,
     'The mobile sound/example action is in the first viewport'
   )
-  assert.equal(firstView.documentWidth, firstView.width, 'Mobile page has no horizontal overflow')
+  assert.equal(
+    firstView.documentWidth,
+    firstView.contentWidth,
+    'Mobile page has no horizontal overflow'
+  )
   let startCount = oscillators()
   await click('enable (audio|sound)')
   assert.equal((await state()).count, 1, 'Enablement itself performs the first known update')
@@ -360,9 +369,9 @@ try {
   ]) {
     await load(width, height)
     const layout = await evaluate(
-      '({ width: innerWidth, documentWidth: document.documentElement.scrollWidth })'
+      '({ width: innerWidth, contentWidth: document.documentElement.clientWidth, documentWidth: document.documentElement.scrollWidth })'
     )
-    assert.equal(layout.documentWidth, layout.width, `No overflow at ${width}px`)
+    assert.equal(layout.documentWidth, layout.contentWidth, `No overflow at ${width}px`)
     observe('responsive-layout', layout)
     if (width >= 768) {
       const image = await cdp('Page.captureScreenshot', {
