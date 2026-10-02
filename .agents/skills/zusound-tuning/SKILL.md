@@ -1,7 +1,7 @@
 ---
 name: zusound-tuning
 description: Use when a working Zusound integration needs repeatable low-volume tuning, correct duration units, and listening evidence.
-compatibility: Zustand >=4.0.0 <6.0.0. Designed for the upcoming Zusound v0.3.0 lifecycle guidance.
+compatibility: Zustand >=4.0.0 <6.0.0. Browser Web Audio with explicit lifecycle ownership.
 ---
 
 # Zusound Tuning

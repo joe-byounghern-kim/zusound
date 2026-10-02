@@ -3,16 +3,8 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-const SECTION_IDS = [
-  'install',
-  'quick-start',
-  'create-zusound',
-  'zusound-options',
-  'aesthetic-parameters',
-  'advanced-example',
-  'production-notes',
-  'what-youll-hear',
-]
+// Share onboarding only. The complete API lives in docs/API.md, not in either README.
+const SECTION_IDS = ['install', 'quick-start', 'runtime-notes']
 
 const REQUIRED_IDS = new Set(SECTION_IDS)
 const START_PREFIX = '<!-- README_SYNC:SECTION_START:'

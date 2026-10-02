@@ -1,21 +1,26 @@
 # Zusound Consumer Skills
 
-The canonical consumer-facing Skills are in `.agents/skills/`:
+The canonical consumer-facing skills are in `.agents/skills/`:
 
-- [Onboarding](skills/zusound-onboarding/SKILL.md)
-- [Debugging](skills/zusound-debugging/SKILL.md)
-- [Migration](skills/zusound-migration/SKILL.md)
-- [Tuning](skills/zusound-tuning/SKILL.md)
+- [Onboarding](skills/zusound-onboarding/SKILL.md): first integration, including a reversible pilot in an existing store.
+- [Debugging](skills/zusound-debugging/SKILL.md): missing, delayed, excessive, or incorrectly mapped feedback.
+- [Tuning](skills/zusound-tuning/SKILL.md): repeatable low-volume configuration and listening checks.
 
-Each Skill tells an agent to inspect the **consumer application** first, use one reproducible browser update, run that application's actual typecheck, tests, and build, and keep audio listening evidence separate from automated evidence. They support Zustand `>=4.0.0 <6.0.0` and the upcoming v0.3.0 lifecycle guidance.
+Each skill starts with the **consumer application**, one reproducible browser
+update, and that application's actual typecheck, tests, and build. Human listening
+evidence stays separate from automated state and lifecycle evidence. Supported
+Zustand versions are `>=4.0.0 <6.0.0`. See the [API reference](../docs/API.md) for
+current options, composition, and cleanup contracts.
 
 ## Maintainer guidance
 
-Validate canonical Skill structure and generate the local bridge only when maintaining this repository:
+Validate canonical skill structure and generate the local bridge only when
+maintaining this repository:
 
 ```bash
 pnpm skills:validate
 pnpm skills:bridge
 ```
 
-`.claude/skills/` is generated local output and must remain untracked. Consumer projects should not use these repository commands as integration verification.
+`.claude/skills/` is generated local output and must remain untracked. Consumer
+projects should not use these repository commands as integration verification.

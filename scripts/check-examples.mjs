@@ -55,6 +55,7 @@ const documents = args.length
   : [
       join(root, 'README.md'),
       join(root, 'packages/zusound/README.md'),
+      join(root, 'docs/API.md'),
       ...markdownFiles(join(root, '.agents')),
     ]
 const directory = mkdtempSync(join(process.env.JCODE_SCRATCH_DIR ?? tmpdir(), 'zusound-examples-'))
