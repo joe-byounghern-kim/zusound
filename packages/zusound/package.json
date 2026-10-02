@@ -1,7 +1,7 @@
 {
   "name": "zusound",
-  "version": "0.3.0",
-  "description": "Hear bugs before you see them - audio debugging for Zustand",
+  "version": "0.3.1",
+  "description": "Optional audio feedback for Zustand state changes",
   "keywords": [
     "zustand",
     "middleware",
@@ -54,12 +54,12 @@
   },
   "devDependencies": {
     "@types/node": "^24.13.6",
-    "@vitest/coverage-v8": "^5.0.1",
-    "jsdom": "^30.1.0",
+    "@vitest/coverage-v8": "^5.0.3",
+    "jsdom": "^30.1.1",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
-    "vite": "^8.3.0",
-    "vitest": "^5.0.1",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3",
     "zustand": "^5.0.15"
   }
 }

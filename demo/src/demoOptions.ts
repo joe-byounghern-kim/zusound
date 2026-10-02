@@ -1,25 +1,24 @@
+import type { AestheticParams, ZusoundOptions } from 'zusound'
+
+export type Tone = Pick<AestheticParams, 'pleasantness' | 'brightness' | 'duration'>
 export type DemoOptions = {
   volume: number
-  debounceMs: number
-  aesthetics: {
-    pleasantness: number
-    brightness: number
-    arousal: number
-    valence: number
-    simultaneity: number
-    baseMidi: number
-  }
+  debounceMs: 0 | 80
+  aesthetics: Tone | null
 }
 
-export const defaultDemoOptions: DemoOptions = {
-  volume: 0.3,
-  debounceMs: 50,
-  aesthetics: {
-    pleasantness: 0.7,
-    brightness: 0.6,
-    arousal: 0.6,
-    valence: 0.6,
-    simultaneity: 1,
-    baseMidi: 69,
-  },
+export const defaultDemoOptions: DemoOptions = { volume: 0.15, debounceMs: 0, aesthetics: null }
+export const tonePresets: Record<'Soft' | 'Bright' | 'Custom', Tone> = {
+  Soft: { pleasantness: 0.9, brightness: 0.25, duration: 0.18 },
+  Bright: { pleasantness: 0.65, brightness: 0.85, duration: 0.12 },
+  Custom: { pleasantness: 0.7, brightness: 0.5, duration: 0.15 },
+}
+
+export function soundOptions(options: DemoOptions): ZusoundOptions {
+  return {
+    enabled: true,
+    volume: options.volume,
+    debounceMs: options.debounceMs,
+    ...(options.aesthetics ? { aesthetics: options.aesthetics } : {}),
+  }
 }

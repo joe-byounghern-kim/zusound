@@ -1,84 +1,64 @@
-import { createZusound, type ZusoundOptions } from 'zusound'
 import { create } from 'zustand'
+import { createZusound, type Change, type ZusoundOptions } from 'zusound'
 
-/* ─── State Shape ─── */
-
-type PlaygroundState = {
+export type PlaygroundData = {
   count: number
   toggled: boolean
-  status: 'idle' | 'loading' | 'success' | 'error'
   items: string[]
-  user: { name: string; active: boolean }
+}
 
+type PlaygroundState = PlaygroundData & {
   increment: () => void
-  decrement: () => void
   toggle: () => void
   addItem: () => void
   removeItem: () => void
-  cycleStatus: () => void
-  updateUser: (patch: Partial<{ name: string; active: boolean }>) => void
   reset: () => void
 }
 
-export type PlaygroundData = Pick<
-  PlaygroundState,
-  'count' | 'toggled' | 'status' | 'items' | 'user'
->
+const initialData = (): PlaygroundData => ({ count: 0, toggled: false, items: ['Item 1'] })
 
-export const DATA_KEYS: Array<keyof PlaygroundData> = [
-  'count',
-  'toggled',
-  'status',
-  'items',
-  'user',
-]
+export const useSubscriberStore = create<PlaygroundState>()((set) => ({
+  ...initialData(),
+  increment: () => set((state) => ({ count: state.count + 1 })),
+  toggle: () => set((state) => ({ toggled: !state.toggled })),
+  addItem: () => set((state) => ({ items: [...state.items, `Item ${state.items.length + 1}`] })),
+  removeItem: () =>
+    set((state) => (state.items.length ? { items: state.items.slice(0, -1) } : state)),
+  reset: () => set(initialData()),
+}))
 
-/* ─── Initial State ─── */
-
-const INITIAL: PlaygroundData = {
-  count: 0,
-  toggled: false,
-  status: 'idle',
-  items: ['apple', 'banana'],
-  user: { name: 'Guest', active: true },
+export function getDemoData(state: PlaygroundState): PlaygroundData {
+  return { count: state.count, toggled: state.toggled, items: state.items }
 }
 
-const STATUS_CYCLE: PlaygroundState['status'][] = ['idle', 'loading', 'success', 'error']
-
-/* ─── State Creator ─── */
-
-function createPlayground(
-  set: (fn: Partial<PlaygroundState> | ((s: PlaygroundState) => Partial<PlaygroundState>)) => void
-): PlaygroundState {
-  return {
-    ...INITIAL,
-    increment: () => set((s) => ({ count: s.count + 1 })),
-    decrement: () => set((s) => ({ count: s.count - 1 })),
-    toggle: () => set((s) => ({ toggled: !s.toggled })),
-    addItem: () =>
-      set((s) => ({ items: [...s.items, `item-${Date.now().toString(36).slice(-4)}`] })),
-    removeItem: () => set((s) => ({ items: s.items.slice(0, -1) })),
-    cycleStatus: () =>
-      set((s) => {
-        const idx = STATUS_CYCLE.indexOf(s.status)
-        return { status: STATUS_CYCLE[(idx + 1) % STATUS_CYCLE.length]! }
-      }),
-    updateUser: (patch) => set((s) => ({ user: { ...s.user, ...patch } })),
-    reset: () => set(INITIAL),
+// These three keys always exist. Editing an array is an update, not a key add/remove.
+export function getDemoChanges(current: PlaygroundData, previous: PlaygroundData): Change[] {
+  const changes: Change[] = []
+  for (const path of ['count', 'toggled', 'items'] as const) {
+    const next = current[path]
+    const before = previous[path]
+    const equal =
+      path === 'items'
+        ? current.items.length === previous.items.length &&
+          current.items.every((item, index) => item === previous.items[index])
+        : Object.is(next, before)
+    if (!equal)
+      changes.push({
+        path,
+        operation: 'update',
+        valueType: path === 'count' ? 'number' : path === 'toggled' ? 'boolean' : 'array',
+        oldValue: before,
+        newValue: next,
+      })
   }
+  return changes
 }
-
-/* ─── Stores ─── */
-
-export const useSubscriberStore = create<PlaygroundState>()((set) => createPlayground(set))
-
-/* ─── Subscriber Binding ─── */
 
 export function bindSubscriberZusound(options: ZusoundOptions): () => void {
-  const instance = createZusound(options)
-  const unsubscribe = useSubscriberStore.subscribe(instance)
+  const sound = createZusound(options)
+  const unsubscribe = useSubscriberStore.subscribe(sound)
   return () => {
     unsubscribe()
-    instance.cleanup()
+    sound.cleanup()
   }
 }

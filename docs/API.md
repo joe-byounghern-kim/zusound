@@ -399,14 +399,16 @@ validation messages, and other accessible non-audio feedback available.
 `onError(error, context)` reports non-fatal audio integration failures:
 
 - `state-change-processing`: subscription attachment or change processing failed.
-- `playback`: sound generation or scheduling failed, including a throwing mapping hook.
+- `playback`: synchronous playback preparation failed, including a throwing mapping hook.
 - `audio-resume`: resuming a suspended audio context rejected.
 
 `context.change` is provided when a descriptor is available. Use the callback for
 best-effort diagnostics or telemetry, not to decide whether a Zustand update
 succeeded. Callback exceptions are isolated and are not recursively reported.
-Absence of a callback is not proof of audio availability. Unsupported Web Audio
-and context-construction failures can return without an `onError` notification.
+Absence of a callback is not proof of audio availability. Unsupported Web Audio,
+context-construction failures, and errors inside scheduled audio-node creation
+can return without an `onError` notification. Scheduled task errors are logged
+with `console.debug` instead.
 
 For a missing cue, confirm explicit enablement, a real post-gesture top-level
 update, active wiring, and teardown state before tuning. See the

@@ -1,17 +1,17 @@
 import './app.css'
 import { Hero } from './sections/Hero'
 import { Demo } from './sections/Demo'
-import { ApiDocs } from './sections/ApiDocs'
 import { Footer } from './sections/Footer'
 
 export function App() {
   return (
     <>
-      <div className="backdrop" aria-hidden="true" />
+      <a className="skip-link" href="#playground">
+        Skip to the example
+      </a>
       <main className="page-container">
         <Hero />
         <Demo />
-        <ApiDocs />
         <Footer />
       </main>
     </>
