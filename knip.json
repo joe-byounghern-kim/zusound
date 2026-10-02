@@ -14,6 +14,9 @@
     },
     "demo": {
       "project": ["src/**/*.{ts,tsx}"],
+      "ignoreIssues": {
+        "src/examples/subscriber.ts": ["exports"]
+      },
       "includeEntryExports": true
     }
   }

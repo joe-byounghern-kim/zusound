@@ -1,36 +1,39 @@
-export type LogEntry = {
-  id: string
-  ts: string
-  action: string
-  op: 'add' | 'remove' | 'update'
-}
+import type { Change } from 'zusound'
 
-interface ActionLogProps {
-  entries: LogEntry[]
-}
+export type LogEntry = Change & { id: number }
 
-export function ActionLog({ entries }: ActionLogProps) {
+export function ActionLog({ entries, running }: { entries: LogEntry[]; running: boolean }) {
   return (
-    <div className="card" style={{ marginTop: 16 }}>
-      <h3>Action Log</h3>
-      <div
-        className="log-container"
-        role="log"
-        aria-label="State change log"
-        aria-relevant="additions"
-      >
-        {entries.length === 0 ? (
-          <p className="log-empty">No state changes yet. Trigger an action above.</p>
-        ) : (
-          entries.map((entry) => (
-            <div key={entry.id} className="log-entry">
-              <span className="timestamp">{entry.ts}</span>
-              <span className={`badge badge--${entry.op}`}>{entry.op}</span>
-              <span className="log-msg">{entry.action}</span>
-            </div>
-          ))
-        )}
+    <section className="changes" aria-labelledby="changes-heading">
+      <div className="section-title">
+        <h2 id="changes-heading">What changed</h2>
+        <span>Latest first</span>
       </div>
-    </div>
+      {entries.length === 0 ? (
+        <p className="muted">Try an example above. Its before and after values will appear here.</p>
+      ) : (
+        <ol
+          className="change-list"
+          aria-label="Recent state changes"
+          aria-live={running ? 'off' : 'polite'}
+        >
+          {entries.map((entry) => (
+            <li key={entry.id} className="log-entry">
+              <code className="change-path">{entry.path}</code>
+              <span className="change-values">
+                <code>{JSON.stringify(entry.oldValue)}</code>
+                <span aria-label="to"> → </span>
+                <code>{JSON.stringify(entry.newValue)}</code>
+              </span>
+              <span className="badge">{entry.operation}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+      <p className="small muted">
+        These keys already exist. Adding an item updates <code>items</code>; it does not add a store
+        key.
+      </p>
+    </section>
   )
 }

@@ -1,36 +1,23 @@
-const scrollToPlayground = () => {
-  document.getElementById('playground')?.scrollIntoView({ behavior: 'smooth' })
-}
-
 export function Hero() {
   return (
-    <section id="hero" className="hero" aria-label="Introduction">
-      <p className="eyebrow">Audio debugging for Zustand</p>
-      <h1>Hear State Changes Before Logs Catch Up</h1>
-      <p className="hero-sub">
-        Zusound turns Zustand updates into instant audio cues — hear adds, removes, and updates as
-        distinct tones. Catch infinite loops and race conditions the moment they happen.
-      </p>
-      <div className="hero-actions">
-        <code className="install-cmd">npm install zusound</code>
-        <button type="button" className="btn--primary" onClick={scrollToPlayground}>
-          Try the Playground
-        </button>
-        <a
-          className="btn btn--ghost"
-          href="https://github.com/joe-byounghern-kim/zusound"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          GitHub
+    <>
+      <header className="site-header">
+        <a className="wordmark" href="#">
+          zusound<span aria-hidden="true"> / </span>
         </a>
-      </div>
-      <ul className="hero-pills" aria-label="Key features">
-        <li className="pill">Zero dependencies</li>
-        <li className="pill">TypeScript first</li>
-        <li className="pill">Auto-disabled in production</li>
-        <li className="pill">Works with any Zustand store</li>
-      </ul>
-    </section>
+        <nav aria-label="Main navigation">
+          <a href="#usage">Use it</a>
+          <a href="https://github.com/joe-byounghern-kim/zusound/blob/main/docs/API.md">
+            Reference
+          </a>
+          <a href="https://github.com/joe-byounghern-kim/zusound">GitHub ↗</a>
+        </nav>
+      </header>
+      <section className="intro" aria-labelledby="page-heading">
+        <p className="kicker">Audio feedback for Zustand</p>
+        <h1 id="page-heading">Hear your Zustand state.</h1>
+        <p>Change a value. Hear a short cue. Keep your eyes on your code.</p>
+      </section>
+    </>
   )
 }
