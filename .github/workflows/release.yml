@@ -136,8 +136,23 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify repository
-        run: pnpm verify
+      # Registry freshness is enforced by development CI through pnpm verify.
+      # Keep the release checks aligned with verify, excluding deps:check so
+      # an immutable tag is not blocked by newly published development tools.
+      - name: Verify tagged repository
+        run: |
+          pnpm format:check
+          pnpm security:check
+          pnpm docs:check
+          pnpm test:tooling
+          pnpm skills:validate
+          pnpm knip
+          pnpm lint
+          pnpm typecheck
+          pnpm test:coverage
+          pnpm build
+          pnpm examples:check
+          pnpm package:check
 
       - name: Validate automation schemas
         run: pnpm automation:check
