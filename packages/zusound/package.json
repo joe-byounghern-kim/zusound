@@ -1,6 +1,6 @@
 {
   "name": "zusound",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Optional audio feedback for Zustand state changes",
   "keywords": [
     "zustand",
