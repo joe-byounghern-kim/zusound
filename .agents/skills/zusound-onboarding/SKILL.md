@@ -1,6 +1,6 @@
 ---
 name: zusound-onboarding
-description: Use when integrating Zusound into one consumer Zustand store for the first time, including a reversible existing-store pilot with browser-gesture and teardown checks.
+description: 'Use when asked to add sound/audio feedback to Zustand, set up Zustand middleware audio, or wire Zusound Web Audio into a counter or existing store for the first time. Covers reversible first wiring, React/Next.js attachment, browser gestures, and cleanup ownership. Not for an already-wired silent integration or tuning working cues.'
 compatibility: Zustand >=4.0.0 <6.0.0. Browser Web Audio with explicit lifecycle ownership.
 ---
 
@@ -11,6 +11,8 @@ compatibility: Zustand >=4.0.0 <6.0.0. Browser Web Audio with explicit lifecycle
 Use for a first Zusound integration, including an application with existing stores
 and middleware. Start with one low-risk store, not a broad rollout. Do not
 redesign state or infer audible output from mocks.
+
+**Not for:** already-wired audio that is wrong or silent (use the zusound-debugging skill), or working cues that need a different character (use the zusound-tuning skill).
 
 ## Inspect first
 
@@ -27,7 +29,7 @@ redesign state or infer audible output from mocks.
 
 See [compatibility and lifecycle](references/compatibility.md), the fully typed
 [configuration examples](references/config-examples.md), and the
-[current API reference](../../../docs/API.md).
+[current API reference](https://github.com/joe-byounghern-kim/zusound/blob/main/docs/API.md).
 
 ## Procedure
 

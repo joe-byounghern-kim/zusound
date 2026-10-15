@@ -18,7 +18,22 @@ npm install zusound zustand
 ```
 
 Supports Zustand `>=4.0.0 <6.0.0`. The example uses named imports from Zustand
-`>=4.5` and 5. For exactly 4.0, see the [legacy imports and composition order](https://github.com/joe-byounghern-kim/zusound/blob/main/docs/API.md#zustand-40-ordering-exception).
+`>=4.3` and 5. Zustand 4.1–4.2 uses default factory imports with modern order.
+For exactly 4.0, see the [legacy imports and composition order](https://github.com/joe-byounghern-kim/zusound/blob/main/docs/API.md#zustand-40-ordering-exception).
+
+### Agent skills
+
+Install the consumer skills for guided onboarding, debugging, and tuning:
+
+```bash
+npx skills add https://github.com/joe-byounghern-kim/zusound
+```
+
+Skills come from the repository, not the npm tarball. To install just one
+manually, copy its entire `.agents/skills/zusound-onboarding/` directory from a
+checkout into your project's `.agents/skills/` (or `.claude/skills/` for Claude
+Code), keeping `SKILL.md` and `references/` together. The same layout works for
+`zusound-debugging` and `zusound-tuning`. No other repository files are needed.
 
 <!-- README_SYNC:SECTION_END:install -->
 
