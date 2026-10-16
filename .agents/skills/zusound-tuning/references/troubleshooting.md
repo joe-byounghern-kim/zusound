@@ -10,7 +10,8 @@ Adjust one group only. Start with global `volume`, then character controls such 
 
 ## Duration changed unexpectedly
 
-Check units before changing values: `AestheticParams.duration` is seconds and `soundMapping[path].duration` is milliseconds. A path mapping wins last for that path.
+`AestheticParams.duration` is seconds. `soundMapping[path].duration` is milliseconds.
+Check units before changing values. A path mapping wins last for that path.
 
 ## Automated checks pass but listening is inconclusive
 

@@ -7,7 +7,7 @@
 2. Confirm `{ enabled: true }` for the development check and start at low volume.
 3. Retry the direct gesture once. Browser activation can suspend audio before interaction.
 4. Confirm the selected integration exists and has not already been cleaned up.
-5. Continue with the [debugging skill](../../zusound-debugging/SKILL.md) if these
+5. Use the zusound-debugging skill if these
    checks do not isolate the issue.
 
 ## Types or state behavior regressed
