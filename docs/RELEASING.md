@@ -67,6 +67,16 @@ Review and commit the version, changelog, manifest, and lockfile changes through
 
 The release workflow validates tag format, tag ancestry from `main`, tag/package-version equality, and whether npm/GitHub already contain the release.
 
+Release validation installs the tag's frozen lockfile and runs the repository quality and security checks. It excludes `deps:check`, which compares development tools with the registry's current latest versions and remains enforced by `pnpm verify` in development CI. Newly published development tools must not block an already reviewed release tag.
+
+If an unpublished tag was blocked by dependency freshness before this workflow change, merge the workflow fix to `main`, then start a new manual run using the workflow on `main` and the existing tag:
+
+```bash
+gh workflow run release.yml --ref main -f tag=v0.3.1 -f auth_mode=oidc
+```
+
+The workflow still checks out and validates the exact tag commit before publishing. Rerunning the original failed run uses its original workflow definition; start a new manual run to use the fixed workflow. Leave the existing tag unchanged.
+
 ## Authentication fallback
 
 If trusted publishing fails, run `Release` through `workflow_dispatch` with the existing tag and `auth_mode=token`; ensure `NPM_TOKEN` is configured first.
