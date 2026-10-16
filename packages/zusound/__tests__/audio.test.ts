@@ -374,23 +374,118 @@ describe('audio playback', () => {
     expect(oscillators).toHaveLength(2)
   })
 
-  it('resumes suspended AudioContext before playback', async () => {
+  it('drops suspended cues even when resume succeeds immediately', async () => {
     const { ctx, oscillators } = setupMockAudioContext()
     ctx.state = 'suspended'
     ctx.resume = vi.fn().mockImplementation(async () => {
       ctx.state = 'running'
     })
 
+    const change = {
+      path: 'count',
+      operation: 'update' as const,
+      valueType: 'number' as const,
+      newValue: 2,
+      oldValue: 1,
+    }
+    await playSound(change)
+
+    expect(ctx.resume).toHaveBeenCalledTimes(1)
+    expect(oscillators).toHaveLength(0)
+
+    await playSound({ ...change, newValue: 3, oldValue: 2 })
+    expect(oscillators).toHaveLength(2)
+  })
+
+  it('never replays a backlog when a shared pending resume finally settles', async () => {
+    const { ctx, oscillators } = setupMockAudioContext()
+    ctx.state = 'suspended'
+    let finishResume!: () => void
+    ctx.resume = vi.fn().mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          finishResume = resolve
+        })
+    )
+    const pending = Array.from({ length: 60 }, (_, i) =>
+      playSound({
+        path: 'count',
+        operation: 'update',
+        valueType: 'number',
+        oldValue: i,
+        newValue: i + 1,
+      })
+    )
+
+    expect(ctx.resume).toHaveBeenCalledTimes(1)
+    expect(oscillators).toHaveLength(0)
+    await Promise.all(pending)
+
+    ctx.state = 'running'
+    finishResume()
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(oscillators).toHaveLength(0)
+
     await playSound({
       path: 'count',
       operation: 'update',
       valueType: 'number',
-      newValue: 2,
-      oldValue: 1,
+      oldValue: 60,
+      newValue: 61,
     })
-
-    expect(ctx.resume).toHaveBeenCalledTimes(1)
     expect(oscillators).toHaveLength(2)
+  })
+
+  it('can retry a rejected resume attempt on a later update', async () => {
+    const { ctx, oscillators } = setupMockAudioContext()
+    ctx.state = 'suspended'
+    ctx.resume.mockRejectedValueOnce(new Error('blocked'))
+    const onError = vi.fn()
+    const change = {
+      path: 'count',
+      operation: 'update' as const,
+      valueType: 'number' as const,
+      oldValue: 0,
+      newValue: 1,
+    }
+
+    await playSound(change, { onError })
+    await playSound(change, { onError })
+
+    expect(ctx.resume).toHaveBeenCalledTimes(2)
+    expect(onError).toHaveBeenCalledTimes(1)
+    expect(oscillators).toHaveLength(0)
+  })
+
+  it('does not schedule stale cues after cleanup while resume is pending', async () => {
+    const old = setupMockAudioContext()
+    old.ctx.state = 'suspended'
+    let finishResume!: () => void
+    old.ctx.resume = vi.fn().mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          finishResume = resolve
+        })
+    )
+    const change = {
+      path: 'count',
+      operation: 'update' as const,
+      valueType: 'number' as const,
+      oldValue: 0,
+      newValue: 1,
+    }
+    const pending = playSound(change)
+    cleanupAudio()
+    const fresh = setupMockAudioContext()
+    old.ctx.state = 'running'
+    finishResume()
+    await pending
+    await Promise.resolve()
+    expect(old.oscillators).toHaveLength(0)
+
+    await playSound(change)
+    expect(fresh.oscillators).toHaveLength(2)
   })
 
   it('applies soundMapping duration and volume overrides', async () => {
