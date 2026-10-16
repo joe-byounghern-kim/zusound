@@ -7,6 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createStore } from 'zustand/vanilla'
 import { devtools, persist, subscribeWithSelector } from 'zustand/middleware'
 import { createZusound, zusound } from '../src/index'
+import type { ZusoundOptions } from '../src/index'
 import { attachZusound } from '../src/adapter'
 import { cleanupAudio } from '../src/audio'
 import * as audio from '../src/audio'
@@ -458,17 +459,124 @@ describe('Zusound Middleware', () => {
     selected.zusoundCleanup()
   })
 
-  describe('Subscriber Usage', () => {
-    it('keeps subscriber invocation in listener mode for function-valued states', () => {
-      const configuredZusound = createZusound({ enabled: false })
-      const invoke = configuredZusound as unknown as (current: unknown, prev: unknown) => unknown
+  describe('middleware dispatch and option diagnostics', () => {
+    const cases = [
+      {
+        name: 'exported zusound',
+        wrap: (options: ZusoundOptions) => zusound(() => ({ count: 0 }), options),
+      },
+      {
+        name: 'createZusound per-call options',
+        wrap: (options: ZusoundOptions) =>
+          createZusound({ volume: 0.2 })(() => ({ count: 0 }), options),
+      },
+      {
+        name: 'createZusound base options',
+        wrap: (options: ZusoundOptions) => createZusound(options)(() => ({ count: 0 })),
+      },
+    ]
 
-      const result = invoke(() => 1, {
-        count: 0,
+    beforeEach(() => {
+      vi.stubEnv('NODE_ENV', 'development')
+      vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    })
+
+    afterEach(() => {
+      vi.unstubAllEnvs()
+      vi.restoreAllMocks()
+    })
+
+    it.each(cases)(
+      'keeps $name in middleware mode with unknown options and releases its engine',
+      ({ wrap }) => {
+        const retainSpy = vi.spyOn(audio, 'retainAudioEngine')
+        const releaseSpy = vi.spyOn(audio, 'releaseAudioEngine')
+        const options = { enabled: true, volume: 0.6, volum: 0.8 }
+        const initializer = wrap(options)
+
+        expect(typeof initializer).toBe('function')
+        expect(retainSpy).not.toHaveBeenCalled()
+
+        const store = createStore<{ count: number }>()(initializer)
+        try {
+          expect(store.getState()).toEqual({ count: 0 })
+          expect(retainSpy).toHaveBeenCalledTimes(1)
+          store.setState({ count: 1 })
+          expect(store.getState().count).toBe(1)
+          expect(window.AudioContext).toHaveBeenCalledTimes(1)
+        } finally {
+          store.zusoundCleanup()
+        }
+
+        expect(releaseSpy).toHaveBeenCalledTimes(1)
+        expect(mockAudioContext.close).toHaveBeenCalledTimes(1)
+        store.zusoundCleanup()
+        expect(releaseSpy).toHaveBeenCalledTimes(1)
+      }
+    )
+
+    it.each(cases)(
+      'warns about unknown $name options in development even when disabled',
+      ({ wrap }) => {
+        const options = { enabled: false, volum: 0.8, debounce: 10 }
+        wrap(options)
+
+        expect(console.warn).toHaveBeenCalledTimes(1)
+        expect(console.warn).toHaveBeenCalledWith('Zusound: Unknown option keys: volum, debounce')
+      }
+    )
+
+    it.each(cases)('does not warn for known $name options', ({ wrap }) => {
+      wrap({
+        enabled: false,
+        volume: 0.5,
+        debounceMs: 10,
+        soundMapping: {},
+        aesthetics: {},
+        mapChangeToAesthetics: () => ({}),
+        performanceMode: true,
+        onError: () => {},
       })
 
-      expect(result).toBeUndefined()
-      configuredZusound.cleanup()
+      expect(console.warn).not.toHaveBeenCalled()
+    })
+
+    it.each(cases)(
+      'does not warn for unknown $name options in production when explicitly enabled',
+      ({ wrap }) => {
+        vi.stubEnv('NODE_ENV', 'production')
+        const options = { enabled: true, volum: 0.8 }
+        const store = createStore<{ count: number }>()(wrap(options))
+        try {
+          store.setState({ count: 1 })
+          expect(store.getState().count).toBe(1)
+          expect(window.AudioContext).toHaveBeenCalledTimes(1)
+          expect(console.warn).not.toHaveBeenCalled()
+        } finally {
+          store.zusoundCleanup()
+        }
+        expect(mockAudioContext.close).toHaveBeenCalledTimes(1)
+      }
+    )
+  })
+
+  describe('Subscriber Usage', () => {
+    it('keeps ordinary object states in subscriber mode without option warnings', () => {
+      const configuredZusound = createZusound({ enabled: true })
+      const store = createStore(() => ({ enabled: false, volume: 0.2, count: 0 }))
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+      const unsubscribe = store.subscribe(configuredZusound)
+
+      try {
+        store.setState({ count: 1 })
+        expect(window.AudioContext).toHaveBeenCalledTimes(1)
+        expect(warnSpy).not.toHaveBeenCalled()
+      } finally {
+        unsubscribe()
+        configuredZusound.cleanup()
+        warnSpy.mockRestore()
+      }
+      expect(mockAudioContext.close).toHaveBeenCalledTimes(1)
     })
 
     it('treats initializer + undefined options as middleware invocation', () => {

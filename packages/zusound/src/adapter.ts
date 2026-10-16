@@ -60,24 +60,25 @@ function emitChanges(changes: Change[], options: EmitChangesOptions): void {
   }
 }
 
-/** Type guard: returns true if the value looks like a ZusoundOptions object (or is undefined). */
-function isZusoundOptions(value: unknown): value is ZusoundOptions {
-  if (value === undefined) return true
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false
+const optionKeys: ReadonlySet<string> = new Set([
+  'enabled',
+  'volume',
+  'debounceMs',
+  'soundMapping',
+  'aesthetics',
+  'mapChangeToAesthetics',
+  'performanceMode',
+  'onError',
+])
 
-  const optionKeys: ReadonlySet<string> = new Set([
-    'enabled',
-    'volume',
-    'debounceMs',
-    'soundMapping',
-    'aesthetics',
-    'mapChangeToAesthetics',
-    'performanceMode',
-    'onError',
-  ])
+/** Diagnose option typos using the shared environment detection, not explicit audio enablement. */
+function warnUnknownOptions(options?: ZusoundOptions): void {
+  if (!options || !resolveDefaultEnabled()) return
 
-  const keys = Object.keys(value as Record<string, unknown>)
-  return keys.every((key) => optionKeys.has(key))
+  const unknownKeys = Object.keys(options).filter((key) => !optionKeys.has(key))
+  if (unknownKeys.length > 0) {
+    console.warn(`Zusound: Unknown option keys: ${unknownKeys.join(', ')}`)
+  }
 }
 
 /** Merge base and per-call options, resolving `enabled` from the environment if unset. */
@@ -94,17 +95,10 @@ function mergeOptions(
 
 /**
  * Discriminate between middleware mode `(initializer, options?)` and
- * subscriber mode `(currentState, prevState)` based on argument types.
+ * subscriber mode `(currentState, prevState)` based on the first argument.
  */
-function isMiddlewareCall<T extends object>(
-  arg1: unknown,
-  arg2: unknown,
-  argCount: number
-): arg1 is StateCreator<T, [], []> {
-  if (typeof arg1 !== 'function') return false
-  if (argCount === 1) return true
-  if (arg2 === undefined) return true
-  return isZusoundOptions(arg2)
+function isMiddlewareCall<T extends object>(arg1: unknown): arg1 is StateCreator<T, [], []> {
+  return typeof arg1 === 'function'
 }
 
 /**
@@ -221,6 +215,8 @@ export function attachZusound<TState>(
  * Call `instance.cleanup()` to release audio resources.
  */
 export function createZusound(baseOptions: ZusoundOptions = {}): ZusoundInstance {
+  warnUnknownOptions(baseOptions)
+
   let debounceTimer: ReturnType<typeof setTimeout> | null = null
   const pendingChanges = createChangeBuffer()
   let cleanedUp = false
@@ -253,9 +249,11 @@ export function createZusound(baseOptions: ZusoundOptions = {}): ZusoundInstance
     const arg1 = args[0]
     const arg2 = args[1]
 
-    if (isMiddlewareCall<T>(arg1, arg2, args.length)) {
+    if (isMiddlewareCall<T>(arg1)) {
       const initializer = arg1
-      const options = mergeOptions(baseOptions, arg2 as ZusoundOptions | undefined)
+      const overrideOptions = arg2 as ZusoundOptions | undefined
+      warnUnknownOptions(overrideOptions)
+      const options = mergeOptions(baseOptions, overrideOptions)
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (...storeArgs: any[]) => {
