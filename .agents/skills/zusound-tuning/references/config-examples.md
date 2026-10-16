@@ -1,5 +1,9 @@
 # Typed profiles, precedence, and duration units
 
+`AestheticParams.duration` is seconds. `soundMapping[path].duration` is milliseconds.
+Named factories below target Zustand >=4.3 and 5. Check the local
+[compatibility reference](compatibility.md) before changing legacy imports/order.
+
 ## Base profile
 
 ```typescript

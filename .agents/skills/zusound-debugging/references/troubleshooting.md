@@ -1,5 +1,35 @@
 # Symptom branches
 
+## Type errors after upgrading to 0.3.x
+
+The 0.3.0 declarations expose cleanup metadata already present at runtime.
+Use curried `create<State>()(...)` or `createStore<State>()(...)` and infer the
+`zusound(initializer)` result. Only the original initializer can have the plain
+`StateCreator<State, [], []>` annotation, not the enhanced result. Do not use
+casts or `skipLibCheck` to suppress these errors.
+
+```typescript
+import { create } from 'zustand'
+import type { StateCreator } from 'zustand/vanilla'
+import { zusound } from 'zusound'
+
+type State = { count: number; increment: () => void }
+const initializer: StateCreator<State, [], []> = (set) => ({
+  count: 0,
+  increment: () => set((state) => ({ count: state.count + 1 })),
+})
+const enhanced = zusound(initializer, { enabled: true, volume: 0.1 })
+export const useCounterStore = create<State>()(enhanced)
+export function disposeCounterAudio(): void {
+  useCounterStore.zusoundCleanup()
+}
+```
+
+This example uses modern named factories. Check the exact Zustand version and
+the local [compatibility forms](compatibility.md) for default imports on 4.0–4.2
+and the outermost-Zusound exception on exactly 4.0. Further reading:
+[0.3.0 changelog](https://github.com/joe-byounghern-kim/zusound/blob/main/packages/zusound/CHANGELOG.md#030).
+
 ## No audio ever
 
 An update triggered during mount is not an audible-playback reproduction. It can run before browser activation while the audio context is suspended. Confirm its state result, then reproduce with a direct click or tap that invokes the same known action.
