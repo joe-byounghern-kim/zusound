@@ -20,8 +20,13 @@ function isLocalDevelopmentHost(hostname: string): boolean {
 }
 
 function readNodeEnv(): string | undefined {
-  if (typeof process === 'undefined') return undefined
-  return process.env?.NODE_ENV
+  try {
+    // Keep the full expression statically replaceable, even without a process global.
+    return process.env.NODE_ENV
+  } catch {
+    // Browsers without a replacement or process shim use the remaining safe defaults.
+    return undefined
+  }
 }
 
 /** Resolve whether audio feedback should be enabled by default. */
