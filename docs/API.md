@@ -374,6 +374,16 @@ win for `progress` and `status`, respectively.
 
 - Recognized development/test environments default on. Production and unknown
   environments default off. Use explicit enablement for deliberate feedback.
+- Default enablement checks `process.env.NODE_ENV` first, including bundler
+  replacements: `production` disables audio, while `development` and `test` enable
+  it, regardless of hostname or `__DEV__`. A runtime `process` global is not
+  required when the bundler replaces the expression.
+- If `NODE_ENV` is missing or unrecognized, a boolean `globalThis.__DEV__` takes
+  precedence over hostname detection. Without either signal, only `localhost`,
+  `127.0.0.1`, `::1`, `[::1]`, and hostnames ending in `.local` default on. Other
+  hosts and environments without a hostname default off. This fallback is
+  deliberately conservative, not general development-server detection. Set
+  `enabled` explicitly when these signals are unavailable or ambiguous.
 - Import is SSR-safe. Web Audio is created lazily only when enabled playback is
   attempted in a browser. Dynamic mapping hooks do not run during SSR because
   playback does not reach that stage.

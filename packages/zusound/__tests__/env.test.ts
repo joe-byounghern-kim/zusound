@@ -34,6 +34,33 @@ afterEach(() => {
 })
 
 describe('resolveDefaultEnabled', () => {
+  it.each([
+    { nodeEnv: 'production', dev: true, hostname: 'localhost', expected: false },
+    { nodeEnv: 'development', dev: false, hostname: 'example.com', expected: true },
+    { nodeEnv: 'test', dev: false, hostname: 'example.com', expected: true },
+  ])(
+    'prioritizes $nodeEnv NODE_ENV over __DEV__ and hostname',
+    ({ nodeEnv, dev, hostname, expected }) => {
+      process.env.NODE_ENV = nodeEnv
+      Reflect.set(globalThis as GlobalWithDev, '__DEV__', dev)
+      setWindow({ location: { hostname } } as unknown as Window & typeof globalThis)
+
+      expect(resolveDefaultEnabled()).toBe(expected)
+    }
+  )
+
+  it.each([
+    { dev: true, hostname: 'example.com', expected: true },
+    { dev: false, hostname: 'localhost', expected: false },
+    { dev: 'true', hostname: 'example.com', expected: false },
+  ])('falls through unknown NODE_ENV with __DEV__=$dev', ({ dev, hostname, expected }) => {
+    process.env.NODE_ENV = 'staging'
+    Reflect.set(globalThis as GlobalWithDev, '__DEV__', dev)
+    setWindow({ location: { hostname } } as unknown as Window & typeof globalThis)
+
+    expect(resolveDefaultEnabled()).toBe(expected)
+  })
+
   it('returns false for production NODE_ENV', () => {
     process.env.NODE_ENV = 'production'
 
