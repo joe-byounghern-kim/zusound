@@ -391,7 +391,12 @@ win for `progress` and `status`, respectively.
   attach a fresh subscriber at a client lifecycle boundary. There is no public
   enable/disable setter for an existing middleware attachment.
 - Browsers can require a direct click or tap before `AudioContext.resume()`
-  succeeds. A passing test or mock does not prove audible playback.
+  succeeds. Cues received while the context is suspended are dropped, including
+  the cue that starts a resume attempt. Only one resume attempt is in flight per
+  context. Old cues are never replayed after activation. Trigger a fresh state
+  update once the context is running. Drops are logged with `console.debug`;
+  rejected attempts still report `audio-resume` and can retry on a later update.
+  A passing test or mock does not prove audible playback.
 - Enabled attachments share the audio engine. Cleanup releases one attachment's
   ownership. Final release closes the context and clears shared scheduling.
 
