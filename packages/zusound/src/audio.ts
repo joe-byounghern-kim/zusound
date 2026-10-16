@@ -17,6 +17,9 @@ import { reportError } from './errors'
 /** Shared AudioContext instance, lazily created on first playback. */
 let audioContext: AudioContext | null = null
 
+/** At most one activation attempt per context, with no queued playback. */
+const resumingContexts = new WeakSet<AudioContext>()
+
 /** Reference count of active attachments (middleware + subscriber instances). */
 let activeAttachmentCount = 0
 
@@ -323,14 +326,28 @@ export async function playSound(
   const ctx = getAudioContext()
   if (!ctx) return
 
-  // Resume context if needed (for autoplay policies)
+  // A resume promise may remain pending until a gesture. Never wait on it:
+  // replaying those updates after activation would produce a stale cue burst.
   if (ctx.state === 'suspended') {
-    try {
-      await ctx.resume()
-    } catch (error) {
-      reportError(error, { stage: 'audio-resume', change }, options?.onError)
-      return
+    if (!resumingContexts.has(ctx)) {
+      resumingContexts.add(ctx)
+      try {
+        void ctx.resume().then(
+          () => {
+            resumingContexts.delete(ctx)
+          },
+          (error: unknown) => {
+            resumingContexts.delete(ctx)
+            reportError(error, { stage: 'audio-resume', change }, options?.onError)
+          }
+        )
+      } catch (error) {
+        resumingContexts.delete(ctx)
+        reportError(error, { stage: 'audio-resume', change }, options?.onError)
+      }
     }
+    console.debug('Zusound: Dropping cue while audio activation is pending')
+    return
   }
 
   if (options?.isPlaybackActive && !options.isPlaybackActive()) return
