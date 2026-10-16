@@ -2,7 +2,25 @@
 
 Current browser audio integration for Zustand `>=4.0.0 <6.0.0`.
 For a first store, start with the [quick start](../README.md#quick-start).
-Examples below use Zustand `>=4.5` and 5 unless noted otherwise.
+Examples below use Zustand `>=4.3` and 5 unless noted otherwise.
+
+### Zustand 4.1–4.4 compatibility
+
+The peer range remains `>=4.0.0 <6.0.0`. Zustand 4.1–4.4 is supported in the
+checked forms, but imports differ. Real packed-consumer ESM, CommonJS, and strict
+TypeScript checks passed for these representatives:
+
+| Zustand         | Factory imports                                                               | Middleware order          |
+| --------------- | ----------------------------------------------------------------------------- | ------------------------- |
+| 4.1.5 and 4.2.0 | Default `create` from `zustand`, default `createStore` from `zustand/vanilla` | Modern outer compositions |
+| 4.3.0 and 4.4.7 | Named `create` and `createStore`                                              | Modern outer compositions |
+
+For 4.1–4.2, replace only the factory imports in modern examples, not their
+composition order. Named factories fail typechecking on 4.1.5 and 4.2.0.
+Legacy defaults are checked in CommonJS `.cts` with NodeNext resolution and
+in `.ts` with Bundler resolution. These checks cover representative versions
+and documented compositions, not every patch or arbitrary stack. Exactly 4.0
+alone needs the [outermost-Zusound exception](#zustand-40-ordering-exception).
 
 - [Entry points and ownership](#entry-points-and-ownership)
 - [Subscriber integration](#subscriber-integration)
@@ -138,7 +156,8 @@ changing its initializer or middleware order.
 
 ## Middleware composition
 
-The following recipes retain typed store cleanup on Zustand `>=4.5` and 5.
+The following recipes retain typed store cleanup on Zustand `>=4.3` and 5.
+Zustand 4.1–4.2 uses the same order with default factory imports as noted above.
 Preserve demonstrated ordering. Typecheck and test other middleware combinations
 in your application rather than assuming arbitrary stacks are supported.
 

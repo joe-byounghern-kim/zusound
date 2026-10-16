@@ -1,6 +1,6 @@
 ---
 name: zusound-debugging
-description: Use when Zusound feedback is missing, excessive, delayed, or incorrectly mapped and needs browser-gesture and lifecycle diagnosis.
+description: 'Use when Zustand middleware audio or Zusound Web Audio is already wired but wrong: no sound, nothing on page load, sound too loud unexpectedly, too many beeps, delayed cues, duplicate subscriptions, incorrect mapping, or type errors after upgrading to 0.3.x. Diagnose activation, enablement, wiring, cleanup, and change detection before tuning. Not for first wiring or deliberate cue-character tuning of a working integration.'
 compatibility: Zustand >=4.0.0 <6.0.0. Browser Web Audio with explicit lifecycle ownership.
 ---
 
@@ -9,6 +9,8 @@ compatibility: Zustand >=4.0.0 <6.0.0. Browser Web Audio with explicit lifecycle
 ## Use when
 
 Use when optional audio feedback is missing, delayed, too frequent, or has an unexpected character. Start with a reproducible browser action rather than broad logging or arbitrary tuning.
+
+**Not for:** first wiring (use the zusound-onboarding skill), or working audio that only needs intentional volume, length, or character changes (use the zusound-tuning skill).
 
 ## Gather
 

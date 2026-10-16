@@ -1,6 +1,6 @@
 ---
 name: zusound-tuning
-description: Use when a working Zusound integration needs repeatable low-volume tuning, correct duration units, and listening evidence.
+description: 'Use when Zusound Web Audio already works but sounds wrong: sound too loud, an upload progress cue too long, too many beeps in an intentional update stream, or a request to tune cue character, brightness, pleasantness, or duration. Compare one low-volume change at a time with correct units and separate human listening evidence. Not for first Zustand middleware audio wiring or an unexpectedly silent/broken integration.'
 compatibility: Zustand >=4.0.0 <6.0.0. Browser Web Audio with explicit lifecycle ownership.
 ---
 
@@ -9,6 +9,8 @@ compatibility: Zustand >=4.0.0 <6.0.0. Browser Web Audio with explicit lifecycle
 ## Use when
 
 Use after integration and lifecycle checks pass but the optional cues are too subtle, busy, harsh, or mismatched to the product. Do not tune to compensate for broken wiring or unavailable browser activation.
+
+**Not for:** first wiring (use the zusound-onboarding skill), or wrong/silent behavior caused by wiring, activation, or duplicate listeners (use the zusound-debugging skill).
 
 ## Establish a fixed scenario
 

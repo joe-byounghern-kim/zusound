@@ -1,5 +1,8 @@
 # Minimal diagnostic configuration
 
+Named factories below target Zustand >=4.3 and 5. Use the default factory import
+on 4.0–4.2 as shown in the local [compatibility reference](compatibility.md).
+
 ```typescript
 import { createStore } from 'zustand/vanilla'
 import { createZusound, type ZusoundOptions } from 'zusound'
