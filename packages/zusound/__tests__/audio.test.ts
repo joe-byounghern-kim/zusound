@@ -79,6 +79,7 @@ describe('audio playback', () => {
     const ctx = {
       state: 'running',
       currentTime: 0,
+      sampleRate: 48000,
       resume: vi.fn().mockResolvedValue(undefined),
       close: vi.fn().mockResolvedValue(undefined),
       destination: {},
@@ -610,6 +611,132 @@ describe('audio playback', () => {
     // Snappy duration ~0.09s
     expect(stopTrue - startTrue).toBeCloseTo(0.09, 4)
   })
+
+  it.each(['development', 'production'])(
+    'warns about corrected volume only in development (%s)',
+    async (environment) => {
+      const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+      vi.stubEnv('NODE_ENV', environment)
+      try {
+        const run = setupMockAudioContext()
+        await playSound(
+          { path: 'count', operation: 'update', valueType: 'number', oldValue: 0, newValue: 1 },
+          { globalVolume: 5 }
+        )
+        expect(run.gains[0].gain.linearRampToValueAtTime.mock.calls[0]?.[0]).toBe(1)
+        expect(warning).toHaveBeenCalledTimes(environment === 'development' ? 1 : 0)
+      } finally {
+        vi.unstubAllEnvs()
+        warning.mockRestore()
+      }
+    }
+  )
+
+  function expectFiniteCue(run: ReturnType<typeof setupMockAudioContext>) {
+    expect(run.oscillators).toHaveLength(2)
+    for (const oscillator of run.oscillators) {
+      for (const args of [
+        ...oscillator.frequency.setValueAtTime.mock.calls,
+        ...oscillator.start.mock.calls,
+        ...oscillator.stop.mock.calls,
+      ]) {
+        expect(args.every((value) => typeof value === 'number' && Number.isFinite(value))).toBe(
+          true
+        )
+      }
+    }
+    for (const gain of run.gains) {
+      for (const args of [
+        ...gain.gain.setValueAtTime.mock.calls,
+        ...gain.gain.linearRampToValueAtTime.mock.calls,
+      ]) {
+        expect(args.every((value) => typeof value === 'number' && Number.isFinite(value))).toBe(
+          true
+        )
+      }
+    }
+  }
+
+  it.each([
+    [0, NaN],
+    [NaN, 1],
+    [Infinity, Infinity],
+    [-Infinity, 1],
+    [-Number.MAX_VALUE, Number.MAX_VALUE],
+  ])('schedules finite parameters for numeric state %s -> %s', async (oldValue, newValue) => {
+    const run = setupMockAudioContext()
+    await playSound({ path: 'count', operation: 'update', valueType: 'number', oldValue, newValue })
+    expectFiniteCue(run)
+  })
+
+  it.each([
+    [5, 1],
+    [-1, 0],
+    [NaN, 0.3],
+    [Infinity, 0.3],
+  ])('sanitizes global volume %s to %s', async (globalVolume, expected) => {
+    const run = setupMockAudioContext()
+    await playSound(
+      { path: 'count', operation: 'update', valueType: 'number', oldValue: 0, newValue: 1 },
+      { globalVolume }
+    )
+    expectFiniteCue(run)
+    expect(run.gains[0].gain.linearRampToValueAtTime.mock.calls[0]?.[0]).toBe(expected)
+  })
+
+  it.each([NaN, Infinity, -Infinity])(
+    'ignores non-finite aesthetics and sound mapping values (%s)',
+    async (invalid) => {
+      const run = setupMockAudioContext()
+      await playSound(
+        { path: 'count', operation: 'update', valueType: 'number', oldValue: 0, newValue: 1 },
+        {
+          aesthetics: {
+            pleasantness: invalid,
+            brightness: invalid,
+            arousal: invalid,
+            valence: invalid,
+            simultaneity: invalid,
+            baseMidi: invalid,
+            duration: invalid,
+          },
+          soundMapping: {
+            count: {
+              frequency: invalid,
+              duration: invalid,
+              timbre: { brightness: invalid, numHarmonics: invalid },
+            },
+          },
+        }
+      )
+      expectFiniteCue(run)
+      const wave = run.ctx.createPeriodicWave.mock.calls[0] as unknown as [
+        Float32Array,
+        Float32Array,
+      ]
+      expect(wave[1].length).toBeGreaterThan(1)
+      expect([...wave[1]].every(Number.isFinite)).toBe(true)
+    }
+  )
+
+  it.each([0, -100, 100000])(
+    'bounds both oscillator frequencies to 20 Hz through Nyquist (%s)',
+    async (frequency) => {
+      const run = setupMockAudioContext()
+      await playSound(
+        { path: 'count', operation: 'update', valueType: 'number', oldValue: 0, newValue: 1 },
+        {
+          soundMapping: { count: { frequency } },
+        }
+      )
+      expectFiniteCue(run)
+      for (const oscillator of run.oscillators) {
+        const value = oscillator.frequency.setValueAtTime.mock.calls[0]?.[0] as number
+        expect(value).toBeGreaterThanOrEqual(20)
+        expect(value).toBeLessThanOrEqual(run.ctx.sampleRate / 2)
+      }
+    }
+  )
 
   it('applies startOffset to delay sound scheduling', async () => {
     const { oscillators, ctx } = setupMockAudioContext()

@@ -2,8 +2,14 @@
  * Shared math utilities used across synthesis, dissonance, and audio modules.
  */
 
-/** Clamp a value to the [0, 1] interval. */
+/** Return a finite number, falling back for missing or non-finite inputs. */
+export function finiteOr(value: number | undefined, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback
+}
+
+/** Clamp a value to the [0, 1] interval, treating non-finite values as zero. */
 export function clamp01(value: number): number {
+  if (!Number.isFinite(value)) return 0
   if (value < 0) return 0
   if (value > 1) return 1
   return value

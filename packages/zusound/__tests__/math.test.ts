@@ -1,7 +1,21 @@
 import { describe, expect, it } from 'vitest'
-import { clamp01, lerp, midiToHz } from '../src/math'
+import { clamp01, finiteOr, lerp, midiToHz } from '../src/math'
+
+describe('finiteOr', () => {
+  it.each([undefined, NaN, Infinity, -Infinity])('replaces %s with its fallback', (value) => {
+    expect(finiteOr(value, 0.3)).toBe(0.3)
+  })
+
+  it.each([0, -1, 0.5])('preserves finite %s', (value) => {
+    expect(finiteOr(value, 0.3)).toBe(value)
+  })
+})
 
 describe('clamp01', () => {
+  it.each([NaN, Infinity, -Infinity])('maps non-finite %s to zero', (value) => {
+    expect(clamp01(value)).toBe(0)
+  })
+
   it('returns the value when within [0, 1]', () => {
     expect(clamp01(0.5)).toBe(0.5)
   })

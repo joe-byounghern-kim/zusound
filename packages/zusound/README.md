@@ -83,6 +83,7 @@ before checking the cue. Browsers may suspend audio until a direct user gesture.
 ## Keep in mind
 
 - Audio is optional. Keep visual feedback and let people choose enablement and volume.
+  Volume is clamped to `0..1`; non-finite volume falls back to `0.3`. Start low.
 - Recognized development/test environments default on. Production and unknown
   environments default off. Use `{ enabled: true }` for deliberate feedback.
 - Changes are detected at top-level keys. Replace changed objects and arrays
