@@ -245,7 +245,7 @@ All fields are optional. Supply options to `zusound(initializer, options)` or
 | Option                  | Type                                                     | Default                                        | Meaning                                                                                                       |
 | ----------------------- | -------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | `enabled`               | `boolean`                                                | recognized dev/test: `true`, otherwise `false` | Enable optional audio. Set explicitly when behavior matters.                                                  |
-| `volume`                | `number`                                                 | `0.3`                                          | Global gain multiplier. Validate a finite value in `0..1` in the application. It is not clamped for you.      |
+| `volume`                | `number`                                                 | `0.3`                                          | Global gain multiplier clamped to `0..1`. Non-finite values use `0.3`; invalid values warn in development.    |
 | `debounceMs`            | `number`                                                 | `0`                                            | Trailing-edge debounce in **milliseconds**. `0` emits without debounce.                                       |
 | `soundMapping`          | `Record<string, Partial<SoundParams>>`                   | `undefined`                                    | Final overrides keyed by top-level path.                                                                      |
 | `aesthetics`            | `Partial<AestheticParams>`                               | value and operation defaults                   | Static character overrides. Bounded controls are clamped to `0..1`.                                           |
@@ -422,7 +422,13 @@ Cleanup cancels pending debounce work.
 
 ### Default cues
 
-Numbers receive magnitude-based pitch and duration modulation. Booleans use short
+Finite numbers receive magnitude-based pitch and duration modulation. Non-finite
+number changes (or overflowing deltas) use a plain update cue without delta
+modulation. Non-finite aesthetic overrides and mapping frequency/duration values
+are ignored in favor of the preceding default or override. Both oscillator
+frequencies are bounded to `20 Hz .. AudioContext.sampleRate / 2`; finite durations
+retain the `0.02` second minimum. Invalid timbre harmonic counts use the default.
+Booleans use short
 cues, strings are brighter, and objects and arrays are more layered. Each
 top-level path has a stable relative pitch offset. Actual output depends on
 browser support, activation, device, and configuration. Keep visual status,

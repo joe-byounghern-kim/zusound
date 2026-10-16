@@ -8,11 +8,12 @@
 
 import type { AestheticParams, Change, SoundParams, ZusoundOptions } from './types'
 import { MAX_HARMONICS } from './constants'
-import { clamp01, lerp, midiToHz } from './math'
+import { clamp01, finiteOr, lerp, midiToHz } from './math'
 import { createTimbreWave } from './synthesis'
 import { mapPleasantnessToIntervalContinuous } from './dissonance'
 import { scheduleAudioTask, stopAudioScheduler } from './scheduler'
 import { reportError } from './errors'
+import { resolveDefaultEnabled } from './env'
 
 /** Shared AudioContext instance, lazily created on first playback. */
 let audioContext: AudioContext | null = null
@@ -149,11 +150,13 @@ function defaultAesthetics(change: Change): AestheticParams {
     const oldNum = typeof change.oldValue === 'number' ? change.oldValue : 0
     const newNum = typeof change.newValue === 'number' ? change.newValue : 0
     const delta = newNum - oldNum
-    const magnitude = clamp01(Math.abs(delta) / (Math.abs(oldNum) + 1))
+    if (Number.isFinite(oldNum) && Number.isFinite(newNum) && Number.isFinite(delta)) {
+      const magnitude = clamp01(Math.abs(delta) / (Math.abs(oldNum) + 1))
 
-    baseMidi += delta > 0 ? magnitude * 4 : -magnitude * 4
-    arousal = lerp(0.4, 0.85, magnitude)
-    duration = lerp(0.1, 0.28, magnitude)
+      baseMidi += delta > 0 ? magnitude * 4 : -magnitude * 4
+      arousal = lerp(0.4, 0.85, magnitude)
+      duration = lerp(0.1, 0.28, magnitude)
+    }
   }
 
   if (change.valueType === 'array' && change.operation === 'update') {
@@ -193,13 +196,18 @@ function mergeAesthetics(
   const merged: AestheticParams = { ...base }
   for (const override of overrides) {
     if (!override) continue
-    if (typeof override.pleasantness === 'number') merged.pleasantness = override.pleasantness
-    if (typeof override.brightness === 'number') merged.brightness = override.brightness
-    if (typeof override.arousal === 'number') merged.arousal = override.arousal
-    if (typeof override.valence === 'number') merged.valence = override.valence
-    if (typeof override.simultaneity === 'number') merged.simultaneity = override.simultaneity
-    if (typeof override.baseMidi === 'number') merged.baseMidi = override.baseMidi
-    if (typeof override.duration === 'number') merged.duration = override.duration
+    for (const key of [
+      'pleasantness',
+      'brightness',
+      'arousal',
+      'valence',
+      'simultaneity',
+      'baseMidi',
+      'duration',
+    ] as const) {
+      const value = override[key]
+      if (typeof value === 'number' && Number.isFinite(value)) merged[key] = value
+    }
   }
 
   merged.pleasantness = clamp01(merged.pleasantness)
@@ -232,7 +240,7 @@ function applySoundMapping(
   const next: AestheticParams = { ...aesthetics }
 
   if (mapping.timbre) {
-    next.brightness = mapping.timbre.brightness
+    next.brightness = finiteOr(mapping.timbre.brightness, next.brightness)
     if (typeof mapping.timbre.numHarmonics === 'number')
       numHarmonicsOverride = mapping.timbre.numHarmonics
   } else if (mapping.waveform) {
@@ -258,7 +266,9 @@ function applySoundMapping(
   next.brightness = clamp01(next.brightness)
 
   const durationOverride =
-    typeof mapping.duration === 'number' ? mapping.duration / 1000 : undefined
+    typeof mapping.duration === 'number' && Number.isFinite(mapping.duration)
+      ? mapping.duration / 1000
+      : undefined
   const volumeMultiplier =
     typeof mapping.volume === 'number' && Number.isFinite(mapping.volume)
       ? clamp01(mapping.volume)
@@ -266,7 +276,10 @@ function applySoundMapping(
 
   return {
     aesthetics: next,
-    baseFrequencyOverride: typeof mapping.frequency === 'number' ? mapping.frequency : undefined,
+    baseFrequencyOverride:
+      typeof mapping.frequency === 'number' && Number.isFinite(mapping.frequency)
+        ? mapping.frequency
+        : undefined,
     numHarmonicsOverride,
     durationOverride,
     volumeMultiplier,
@@ -317,8 +330,12 @@ export async function playSound(
   change: Change,
   volumeOrOptions: number | PlaySoundOptions = 0.3
 ): Promise<void> {
-  const globalVolume =
+  const requestedVolume =
     typeof volumeOrOptions === 'number' ? volumeOrOptions : (volumeOrOptions.globalVolume ?? 0.3)
+  const globalVolume = clamp01(finiteOr(requestedVolume, 0.3))
+  if (requestedVolume !== globalVolume && resolveDefaultEnabled()) {
+    console.warn('Zusound: volume must be finite and within 0..1; using', globalVolume)
+  }
   const options = typeof volumeOrOptions === 'number' ? undefined : volumeOrOptions
 
   if (options?.isPlaybackActive && !options.isPlaybackActive()) return
@@ -363,10 +380,17 @@ export async function playSound(
 
   const numHarmonics = Math.min(
     MAX_HARMONICS,
-    Math.max(1, Math.floor(mapped.numHarmonicsOverride ?? 10))
+    Math.max(1, Math.floor(finiteOr(mapped.numHarmonicsOverride, 10)))
   )
-  const baseFrequency =
-    mapped.baseFrequencyOverride ?? midiToHz(mapped.aesthetics.baseMidi ?? base.baseMidi ?? 57)
+  const maxFrequency = Math.max(20, finiteOr(ctx.sampleRate, 44100) / 2)
+  const boundFrequency = (frequency: number) => Math.min(maxFrequency, Math.max(20, frequency))
+  const defaultFrequency = midiToHz(base.baseMidi ?? 57)
+  const baseFrequency = boundFrequency(
+    finiteOr(
+      mapped.baseFrequencyOverride ?? midiToHz(mapped.aesthetics.baseMidi ?? base.baseMidi ?? 57),
+      defaultFrequency
+    )
+  )
 
   const intervalSemitones = mapPleasantnessToIntervalContinuous({
     pleasantness: mapped.aesthetics.pleasantness,
@@ -416,7 +440,10 @@ export async function playSound(
     oscB.setPeriodicWave(wave)
 
     oscA.frequency.setValueAtTime(baseFrequency, baseStart)
-    oscB.frequency.setValueAtTime(baseFrequency * Math.pow(2, intervalSemitones / 12), baseStart)
+    oscB.frequency.setValueAtTime(
+      boundFrequency(baseFrequency * Math.pow(2, intervalSemitones / 12)),
+      baseStart
+    )
 
     oscA.connect(gainA)
     oscB.connect(gainB)
