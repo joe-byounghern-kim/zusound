@@ -8,6 +8,9 @@
       "ignoreBinaries": ["validate-dependabot-yaml"],
       "ignoreDependencies": ["@bugron/validate-dependabot-yaml"]
     },
+    "packages/core": {
+      "project": ["src/**/*.ts", "__tests__/**/*.ts", "*.config.ts"]
+    },
     "packages/zusound": {
       "entry": ["__tests__/middleware-types.ts"],
       "project": ["src/**/*.ts", "__tests__/**/*.ts", "*.config.ts"]

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { attachZusound } from '../src/adapter'
-import { cleanupAudio } from '../src/audio'
-import * as audio from '../src/audio'
+import { cleanupAudio } from '../../core/src/audio'
+import * as audio from '../../core/src/audio'
 import type { ZusoundAdapter } from '../src/types'
 
 type State = { a: number; b: number }

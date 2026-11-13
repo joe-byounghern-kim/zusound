@@ -4,7 +4,9 @@
 
 Optional audio feedback for Zustand state changes, using browser Web Audio.
 Hear small cues while developing or add deliberate, opt-in feedback to your app.
-Audio is created lazily, with no runtime dependencies beyond the Zustand peer.
+Audio is created lazily. The diffing and sound engine ships separately as
+[`@zusound/core`](https://www.npmjs.com/package/@zusound/core), the only runtime
+dependency besides the Zustand peer.
 
 [Try the interactive demo](https://joe-byounghern-kim.github.io/zusound/).
 
@@ -100,6 +102,8 @@ before checking the cue. Browsers may suspend audio until a direct user gesture.
 - [API reference](https://github.com/joe-byounghern-kim/zusound/blob/main/docs/API.md):
   all options and types, subscriber and React integration, middleware composition,
   debounce behavior, duration units, and non-fatal diagnostics.
+- [`@zusound/core`](https://github.com/joe-byounghern-kim/zusound/blob/main/packages/core/README.md):
+  the same diffing and Web Audio cues without Zustand, for any state source.
 - [Consumer skills](https://github.com/joe-byounghern-kim/zusound/blob/main/.agents/README.md):
   guided onboarding for an existing store, debugging, and tuning.
 - [Source and contributing](https://github.com/joe-byounghern-kim/zusound/blob/main/CONTRIBUTING.md).

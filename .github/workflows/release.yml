@@ -106,14 +106,27 @@ jobs:
             echo "::error::Tag '${{ steps.release_ctx.outputs.tag }}' does not match package version 'v${PACKAGE_VERSION}'."
             exit 1
           fi
+          # zusound and @zusound/core are a fixed changesets group and must release together.
+          # Tags from before the split have no packages/core.
+          if [ -f packages/core/package.json ]; then
+            CORE_VERSION=$(node -e "console.log(JSON.parse(require('node:fs').readFileSync('packages/core/package.json', 'utf8')).version)")
+            if [ "$CORE_VERSION" != "$PACKAGE_VERSION" ]; then
+              echo "::error::@zusound/core version '$CORE_VERSION' does not match zusound version '$PACKAGE_VERSION'."
+              exit 1
+            fi
+          fi
           echo "package_version=$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Skip if version already published
         id: published_guard
         run: |
           PACKAGE_VERSION="${{ steps.package_version.outputs.package_version }}"
-          if npm view "zusound@$PACKAGE_VERSION" version >/dev/null 2>&1; then
-            echo "Version $PACKAGE_VERSION is already published. Skipping."
+          CORE_PUBLISHED=true
+          if [ -f packages/core/package.json ] && ! npm view "@zusound/core@$PACKAGE_VERSION" version >/dev/null 2>&1; then
+            CORE_PUBLISHED=false
+          fi
+          if npm view "zusound@$PACKAGE_VERSION" version >/dev/null 2>&1 && [ "$CORE_PUBLISHED" = "true" ]; then
+            echo "Version $PACKAGE_VERSION of zusound and @zusound/core is already published. Skipping."
             echo "should_publish_npm=false" >> "$GITHUB_OUTPUT"
           else
             echo "should_publish_npm=true" >> "$GITHUB_OUTPUT"
@@ -187,6 +200,8 @@ jobs:
           npm config set registry https://registry.npmjs.org/
           pnpm exec changeset publish
         env:
+          # The job's id-token permission lets token publishes keep provenance.
+          NPM_CONFIG_PROVENANCE: true
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # ── GitHub Release ─────────────────────────────────────────────────
@@ -242,7 +257,7 @@ jobs:
             echo "| **Published to npm** | ${PUBLISHED:-skipped} |"
             echo "| **Created GitHub Release** | ${GH_CREATED:-skipped} |"
             if [ "$PUBLISHED" = "true" ]; then
-              echo "| **npm** | [zusound@$VERSION](https://www.npmjs.com/package/zusound/v/$VERSION) |"
+              echo "| **npm** | [zusound@$VERSION](https://www.npmjs.com/package/zusound/v/$VERSION), [@zusound/core@$VERSION](https://www.npmjs.com/package/@zusound/core/v/$VERSION) |"
             fi
             echo "| **GitHub Release** | [$TAG](https://github.com/${{ github.repository }}/releases/tag/$TAG) |"
           } >> "$GITHUB_STEP_SUMMARY"

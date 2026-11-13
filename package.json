@@ -1,7 +1,7 @@
 {
   "name": "zusound-monorepo",
   "private": true,
-  "description": "Zusound - Audio feedback middleware for Zustand",
+  "description": "Zusound - state-change audio cues (@zusound/core) and Zustand middleware (zusound)",
   "repository": {
     "type": "git",
     "url": "https://github.com/joe-byounghern-kim/zusound.git"
@@ -10,6 +10,7 @@
   "author": "joe-byounghern-kim",
   "type": "module",
   "workspaces": [
+    "packages/core",
     "packages/zusound",
     "demo"
   ],
@@ -19,11 +20,11 @@
     "changeset": "changeset",
     "clean": "turbo run clean && rm -rf node_modules",
     "dev": "turbo run dev",
-    "demo:build": "pnpm -C packages/zusound build && pnpm -C demo build",
-    "demo:dev": "pnpm -C packages/zusound build && pnpm -C demo dev",
+    "demo:build": "pnpm --filter zusound... build && pnpm -C demo build",
+    "demo:dev": "pnpm --filter zusound... build && pnpm -C demo dev",
     "demo:preview": "pnpm demo:build && pnpm -C demo run preview",
     "demo:smoke": "pnpm demo:build && node scripts/demo-smoke.mjs",
-    "demo:typecheck": "pnpm -C packages/zusound build && pnpm -C demo typecheck",
+    "demo:typecheck": "pnpm --filter zusound... build && pnpm -C demo typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "knip": "knip --reporter compact",
@@ -33,13 +34,13 @@
     "readme:sync": "node scripts/sync-readme.mjs",
     "docs:check": "pnpm readme:check && node scripts/check-docs.mjs",
     "deps:check": "node scripts/check-outdated.mjs",
-    "package:check": "node scripts/check-package.mjs && publint run packages/zusound --strict --level warning && attw --pack packages/zusound",
+    "package:check": "node scripts/check-package.mjs && publint run packages/core --strict --level warning && publint run packages/zusound --strict --level warning && attw --pack packages/core && attw --pack packages/zusound",
     "automation:check": "node scripts/check-automation.mjs",
     "security:check": "node scripts/check-audit.mjs",
     "skills:bridge": "node scripts/build-skill-bridge.mjs",
     "skills:check": "node scripts/check-skills.mjs",
     "skills:validate": "pnpm skills:check",
-    "publish:package": "npm publish --workspace=packages/zusound",
+    "publish:package": "pnpm -r publish",
     "release": "turbo run build && changeset publish",
     "release:auto:prepare": "node scripts/create-auto-changeset.mjs && pnpm version-packages",
     "release:auto:dry-run": "node scripts/create-auto-changeset.mjs --dry-run",
@@ -49,8 +50,8 @@
     "typecheck": "turbo run typecheck",
     "verify": "pnpm format:check && pnpm security:check && pnpm deps:check && pnpm docs:check && pnpm test:tooling && pnpm skills:validate && pnpm knip && pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm build && pnpm examples:check && pnpm package:check",
     "version-packages": "changeset version",
-    "examples:check": "pnpm -C packages/zusound build && node scripts/check-examples.mjs",
-    "consumer:check": "pnpm -C packages/zusound build && node scripts/check-consumer.mjs",
+    "examples:check": "pnpm --filter zusound... build && node scripts/check-examples.mjs",
+    "consumer:check": "pnpm --filter zusound... build && node scripts/check-consumer.mjs",
     "test:tooling": "node --test scripts/*.test.mjs"
   },
   "devDependencies": {

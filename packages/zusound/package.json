@@ -49,6 +49,9 @@
     "test:watch": "vitest watch",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
   },
+  "dependencies": {
+    "@zusound/core": "workspace:^"
+  },
   "peerDependencies": {
     "zustand": ">=4.0.0 <6.0.0"
   },

@@ -22,13 +22,10 @@ import { createZusound } from './adapter'
 export { createZusound }
 export const zusound = createZusound()
 
-// Public type exports
+// Public type exports. Change and sound types are defined by @zusound/core.
+export type { AestheticParams, Change, SoundParams, ZusoundErrorContext } from '@zusound/core'
 export type {
-  AestheticParams,
   ZusoundOptions,
-  Change,
-  SoundParams,
-  ZusoundErrorContext,
   ZusoundApi,
   ZusoundInstance,
   ZusoundSubscriber,

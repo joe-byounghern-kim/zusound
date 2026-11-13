@@ -1,75 +1,24 @@
 /**
- * Core orchestration.
+ * Zustand wiring.
  *
  * Exposes `createZusound()` for stateful middleware/subscriber usage and
- * `attachZusound()` for low-level adapter wiring. Handles debounce timing,
- * shared state-change emission, and audio engine retain/release lifecycle.
+ * `attachZusound()` for low-level adapter wiring. Diffing, debounce timing,
+ * playback, and audio engine lifetime belong to the `@zusound/core` sonifier;
+ * this module only decides when a sonifier exists and which store feeds it.
  */
 
-import type {
-  Change,
-  ZusoundAdapter,
-  ZusoundHandle,
-  ZusoundInstance,
-  ZusoundOptions,
-} from './types'
-import { createChangeBuffer } from './changes'
-import { MAX_STAGGER_SECONDS, STAGGER_SECONDS } from './constants'
-import { detectChanges } from './differ'
-import { playSound, releaseAudioEngine, retainAudioEngine } from './audio'
-import { reportError } from './errors'
-import { resolveDefaultEnabled } from './env'
+import {
+  createSonifier,
+  resolveDefaultEnabled,
+  sonifierOptionKeys,
+  type Sonifier,
+  type SonifierOptions,
+  type ZusoundErrorContext,
+} from '@zusound/core'
+import type { ZusoundAdapter, ZusoundHandle, ZusoundInstance, ZusoundOptions } from './types'
 import type { StateCreator } from 'zustand/vanilla'
 
-type EmitChangesOptions = Pick<
-  ZusoundOptions,
-  'volume' | 'soundMapping' | 'aesthetics' | 'mapChangeToAesthetics' | 'performanceMode' | 'onError'
-> & {
-  isPlaybackActive?: () => boolean
-}
-
-/** Play sounds for a batch of changes, staggering onset times. */
-function emitChanges(changes: Change[], options: EmitChangesOptions): void {
-  if (changes.length === 0) return
-
-  const {
-    volume = 0.3,
-    soundMapping,
-    aesthetics,
-    mapChangeToAesthetics,
-    performanceMode,
-    onError,
-    isPlaybackActive,
-  } = options
-
-  for (let i = 0; i < changes.length; i++) {
-    const change = changes[i]
-    playSound(change, {
-      globalVolume: volume,
-      soundMapping,
-      aesthetics,
-      mapChangeToAesthetics,
-      performanceMode,
-      onError,
-      startOffset: Math.min(i * STAGGER_SECONDS, MAX_STAGGER_SECONDS),
-      isPlaybackActive,
-    }).catch((error) => {
-      reportError(error, { stage: 'playback', change }, onError)
-      console.debug('Zusound: Audio playback failed', error)
-    })
-  }
-}
-
-const optionKeys: ReadonlySet<string> = new Set([
-  'enabled',
-  'volume',
-  'debounceMs',
-  'soundMapping',
-  'aesthetics',
-  'mapChangeToAesthetics',
-  'performanceMode',
-  'onError',
-])
+const optionKeys: ReadonlySet<string> = new Set(sonifierOptionKeys)
 
 /** Diagnose option typos using the shared environment detection, not explicit audio enablement. */
 function warnUnknownOptions(options?: ZusoundOptions): void {
@@ -78,6 +27,36 @@ function warnUnknownOptions(options?: ZusoundOptions): void {
   const unknownKeys = Object.keys(options).filter((key) => !optionKeys.has(key))
   if (unknownKeys.length > 0) {
     console.warn(`Zusound: Unknown option keys: ${unknownKeys.join(', ')}`)
+  }
+}
+
+/**
+ * Keep only recognized keys. Typos were already reported when the options
+ * reached `createZusound()` or the middleware call, so the sonifier must not
+ * report them a second time.
+ */
+function toSonifierOptions(options: ZusoundOptions): SonifierOptions {
+  const picked: Record<string, unknown> = {}
+  for (const key of sonifierOptionKeys) {
+    if (key in options) picked[key] = options[key]
+  }
+  return picked as SonifierOptions
+}
+
+/** Deliver a diagnostic without letting a throwing callback escape. */
+function reportError(
+  error: unknown,
+  context: ZusoundErrorContext,
+  onError?: ZusoundOptions['onError']
+): void {
+  try {
+    onError?.(error, context)
+  } catch (reportingError) {
+    try {
+      console.debug('Zusound: Error reporting failed', reportingError)
+    } catch {
+      // Logging is best-effort and must not escape this boundary.
+    }
   }
 }
 
@@ -104,106 +83,47 @@ function isMiddlewareCall<T extends object>(arg1: unknown): arg1 is StateCreator
 /**
  * Wire audio feedback to a store adapter.
  *
- * Subscribes to state changes, runs the differ, and emits sounds.
- * Returns a handle whose `cleanup()` unsubscribes and releases audio resources.
+ * Subscribes a sonifier to state changes. Returns a handle whose `cleanup()`
+ * unsubscribes and releases audio resources.
  */
 export function attachZusound<TState>(
   adapter: ZusoundAdapter<TState>,
   options: ZusoundOptions = {}
 ): ZusoundHandle {
-  const {
-    enabled = resolveDefaultEnabled(),
-    volume = 0.3,
-    debounceMs = 0,
-    soundMapping,
-    aesthetics,
-    mapChangeToAesthetics,
-    performanceMode,
-    onError,
-  } = options
+  const noopCleanup = () => {}
+  const sonifier = createSonifier(toSonifierOptions(options))
 
-  const cleanup = () => {}
-
-  if (!enabled) {
-    adapter.attachCleanup?.(cleanup)
-    return { cleanup }
+  if (!sonifier.enabled) {
+    adapter.attachCleanup?.(noopCleanup)
+    return { cleanup: noopCleanup }
   }
-
-  retainAudioEngine()
-
-  let debounceTimer: ReturnType<typeof setTimeout> | null = null
-  const pendingChanges = createChangeBuffer()
-  let cleanedUp = false
 
   let unsubscribe: ZusoundHandle['cleanup']
   try {
-    unsubscribe = adapter.subscribe((currentState, prevState) => {
-      if (cleanedUp) return
-
-      try {
-        const changes = detectChanges(currentState, prevState)
-
-        if (debounceMs > 0) {
-          pendingChanges.add(changes)
-
-          if (debounceTimer) clearTimeout(debounceTimer)
-          debounceTimer = setTimeout(() => {
-            if (cleanedUp) return
-            const flushed = pendingChanges.flush()
-            debounceTimer = null
-            emitChanges(flushed, {
-              volume,
-              soundMapping,
-              aesthetics,
-              mapChangeToAesthetics,
-              performanceMode,
-              onError,
-              isPlaybackActive: () => !cleanedUp,
-            })
-          }, debounceMs)
-        } else {
-          emitChanges(changes, {
-            volume,
-            soundMapping,
-            aesthetics,
-            mapChangeToAesthetics,
-            performanceMode,
-            onError,
-            isPlaybackActive: () => !cleanedUp,
-          })
-        }
-      } catch (error) {
-        reportError(error, { stage: 'state-change-processing' }, onError)
-        console.warn('Zusound: Error processing state change', error)
-      }
-    })
+    unsubscribe = adapter.subscribe(sonifier.update)
   } catch (error) {
-    releaseAudioEngine()
-    reportError(error, { stage: 'state-change-processing' }, onError)
+    sonifier.dispose()
+    reportError(error, { stage: 'state-change-processing' }, options.onError)
     console.warn('Zusound: Failed to attach subscription', error)
-    adapter.attachCleanup?.(cleanup)
-    return { cleanup }
+    adapter.attachCleanup?.(noopCleanup)
+    return { cleanup: noopCleanup }
   }
 
-  const cleanupWithAudio = () => {
+  let cleanedUp = false
+  const cleanup = () => {
     if (cleanedUp) return
     cleanedUp = true
 
-    if (debounceTimer) {
-      clearTimeout(debounceTimer)
-      debounceTimer = null
-    }
-    pendingChanges.clear()
     try {
       unsubscribe()
     } finally {
-      releaseAudioEngine()
+      sonifier.dispose()
     }
   }
 
-  adapter.attachCleanup?.(cleanupWithAudio)
+  adapter.attachCleanup?.(cleanup)
 
-  return { cleanup: cleanupWithAudio }
+  return { cleanup }
 }
 
 /**
@@ -217,25 +137,16 @@ export function attachZusound<TState>(
 export function createZusound(baseOptions: ZusoundOptions = {}): ZusoundInstance {
   warnUnknownOptions(baseOptions)
 
-  let debounceTimer: ReturnType<typeof setTimeout> | null = null
-  const pendingChanges = createChangeBuffer()
   let cleanedUp = false
-  let retainedSubscriberAudio = false
+  // Created on the first enabled subscriber call, so middleware-only use never holds audio.
+  let subscriberSonifier: Sonifier | undefined
 
   const cleanup = () => {
     if (cleanedUp) return
     cleanedUp = true
 
-    if (debounceTimer) {
-      clearTimeout(debounceTimer)
-      debounceTimer = null
-    }
-    pendingChanges.clear()
-
-    if (retainedSubscriberAudio) {
-      releaseAudioEngine()
-      retainedSubscriberAudio = false
-    }
+    subscriberSonifier?.dispose()
+    subscriberSonifier = undefined
   }
 
   function instance<T extends object>(
@@ -279,43 +190,11 @@ export function createZusound(baseOptions: ZusoundOptions = {}): ZusoundInstance
       }
     }
 
-    const currentState = arg1 as T
-    const prevState = arg2 as T
-    const options = mergeOptions(baseOptions)
+    // Enablement is re-resolved per call, matching the environment at each update.
+    if (cleanedUp || !mergeOptions(baseOptions).enabled) return
 
-    if (cleanedUp || !options.enabled) return
-
-    if (!retainedSubscriberAudio) {
-      retainAudioEngine()
-      retainedSubscriberAudio = true
-    }
-
-    try {
-      const changes = detectChanges(currentState, prevState)
-
-      if ((options.debounceMs ?? 0) > 0) {
-        pendingChanges.add(changes)
-
-        if (debounceTimer) clearTimeout(debounceTimer)
-        debounceTimer = setTimeout(() => {
-          if (cleanedUp) return
-          const flushed = pendingChanges.flush()
-          debounceTimer = null
-          emitChanges(flushed, {
-            ...options,
-            isPlaybackActive: () => !cleanedUp,
-          })
-        }, options.debounceMs)
-      } else {
-        emitChanges(changes, {
-          ...options,
-          isPlaybackActive: () => !cleanedUp,
-        })
-      }
-    } catch (error) {
-      reportError(error, { stage: 'state-change-processing' }, options.onError)
-      console.warn('Zusound: Error processing state change', error)
-    }
+    subscriberSonifier ??= createSonifier(toSonifierOptions({ ...baseOptions, enabled: true }))
+    subscriberSonifier.update(arg1, arg2)
 
     return undefined
   }

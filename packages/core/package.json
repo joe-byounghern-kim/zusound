@@ -1,0 +1,67 @@
+{
+  "name": "@zusound/core",
+  "version": "0.3.2",
+  "description": "Framework-agnostic state diffing and Web Audio cues for Zusound",
+  "keywords": [
+    "audio",
+    "sonification",
+    "web-audio",
+    "state-diff",
+    "debugging",
+    "developer-experience"
+  ],
+  "homepage": "https://github.com/joe-byounghern-kim/zusound",
+  "bugs": "https://github.com/joe-byounghern-kim/zusound/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joe-byounghern-kim/zusound.git",
+    "directory": "packages/core"
+  },
+  "license": "MIT",
+  "author": "joe-byounghern-kim",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "clean": "rm -rf dist coverage",
+    "dev": "tsup --watch",
+    "lint": "eslint src __tests__ tsup.config.ts vitest.config.ts --max-warnings=0",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest watch",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@vitest/coverage-v8": "^5.0.4",
+    "jsdom": "^30.1.2",
+    "tsup": "^9.0.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4"
+  }
+}

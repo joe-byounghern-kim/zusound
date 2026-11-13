@@ -5,10 +5,10 @@ import { runInNewContext } from 'node:vm'
 import test from 'node:test'
 
 // Exercise the same esbuild installation that the package's existing tsup build uses.
-const requirePackage = createRequire(new URL('../packages/zusound/package.json', import.meta.url))
+const requirePackage = createRequire(new URL('../packages/core/package.json', import.meta.url))
 const requireTsup = createRequire(requirePackage.resolve('tsup'))
 const { buildSync } = requireTsup('esbuild')
-const entryPoint = fileURLToPath(new URL('../packages/zusound/src/env.ts', import.meta.url))
+const entryPoint = fileURLToPath(new URL('../packages/core/src/env.ts', import.meta.url))
 
 function bundle(nodeEnv, minify = false) {
   const { outputFiles } = buildSync({

@@ -20,13 +20,19 @@ if (
 
 const directory = mkdtempSync(join(process.env.JCODE_SCRATCH_DIR ?? tmpdir(), 'zusound-consumer-'))
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm'
+const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm'
 
 try {
-  const packed = JSON.parse(
-    execFileSync(npm, ['pack', '--json', '--pack-destination', directory], {
-      cwd: join(root, 'packages/zusound'),
-      encoding: 'utf8',
-    })
+  // pnpm pack rewrites workspace: ranges, so zusound's @zusound/core dependency
+  // resolves to the core tarball packed beside it instead of the registry.
+  const tarballs = ['packages/core', 'packages/zusound'].map(
+    (packageDirectory) =>
+      JSON.parse(
+        execFileSync(pnpm, ['pack', '--json', '--pack-destination', directory], {
+          cwd: join(root, packageDirectory),
+          encoding: 'utf8',
+        })
+      ).filename
   )
   writeFileSync(
     join(directory, 'package.json'),
@@ -39,7 +45,7 @@ try {
       '--ignore-scripts',
       '--no-audit',
       '--no-fund',
-      join(directory, packed[0].filename),
+      ...tarballs,
       `zustand@${version}`,
       'typescript@5.9.3',
       'react@19.3.0',
@@ -119,14 +125,16 @@ try {
     // Compile the same contract through both import and require type exports.
     writeFileSync(join(directory, 'smoke.cts'), smokeSource)
   }
-  for (const file of ['smoke.mjs', 'smoke.cjs']) {
+  for (const file of ['smoke.mjs', 'smoke.cjs', 'core-smoke.mjs', 'core-smoke.cjs']) {
     execFileSync(process.execPath, [file], { cwd: directory, stdio: 'inherit' })
   }
   execFileSync(process.execPath, ['node_modules/typescript/lib/tsc.js', '-p', 'tsconfig.json'], {
     cwd: directory,
     stdio: 'inherit',
   })
-  console.log(`[consumer-check] OK (Zustand ${version}: ESM, CommonJS, strict TypeScript)`)
+  console.log(
+    `[consumer-check] OK (Zustand ${version} and @zusound/core: ESM, CommonJS, strict TypeScript)`
+  )
 } catch (error) {
   console.error(`[consumer-check] Failed for Zustand ${version}: ${error.message}`)
   process.exitCode = 1

@@ -1,0 +1,10 @@
+const assert = require('node:assert/strict')
+const { createSonifier, detectChanges, version } = require('@zusound/core')
+
+const changes = detectChanges({ count: 1 }, { count: 0 })
+assert.equal(changes.length, 1)
+const sonifier = createSonifier({ enabled: true })
+sonifier.update({ count: 2 }, { count: 1 })
+sonifier.dispose()
+assert.match(version, /^\d+\.\d+\.\d+/)
+console.log('@zusound/core CommonJS require, SSR updates and dispose passed')

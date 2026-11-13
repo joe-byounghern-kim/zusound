@@ -1,27 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createStore } from 'zustand/vanilla'
 import { attachZusound } from '../src/adapter'
-import * as audio from '../src/audio'
-import { reportError } from '../src/errors'
+import * as audio from '../../core/src/audio'
 import { zusound } from '../src/index'
 
-describe('reportError', () => {
-  it('isolates a throwing diagnostic callback', () => {
-    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => undefined)
-    const callback = vi.fn(() => {
-      throw new Error('telemetry failed')
-    })
-    const original = new Error('original')
-
-    try {
-      expect(() => reportError(original, { stage: 'playback' }, callback)).not.toThrow()
-      expect(callback).toHaveBeenCalledTimes(1)
-      expect(callback).toHaveBeenCalledWith(original, { stage: 'playback' })
-    } finally {
-      debugSpy.mockRestore()
-    }
-  })
-
+describe('middleware error reporting', () => {
   it('keeps state updates non-fatal when state processing diagnostics throw', () => {
     const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => undefined)
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
