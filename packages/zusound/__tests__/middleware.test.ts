@@ -9,8 +9,8 @@ import { devtools, persist, subscribeWithSelector } from 'zustand/middleware'
 import { createZusound, zusound } from '../src/index'
 import type { ZusoundOptions } from '../src/index'
 import { attachZusound } from '../src/adapter'
-import { cleanupAudio } from '../src/audio'
-import * as audio from '../src/audio'
+import { cleanupAudio } from '../../core/src/audio'
+import * as audio from '../../core/src/audio'
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
@@ -203,6 +203,59 @@ describe('Zusound Middleware', () => {
       expect(typeof handle.cleanup).toBe('function')
       expect(() => handle.cleanup()).not.toThrow()
       expect(attachCleanup).toHaveBeenCalledTimes(1)
+    } finally {
+      warnSpy.mockRestore()
+    }
+  })
+
+  it('keeps an attach failure non-fatal when its diagnostic callback throws', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => undefined)
+    const reportingError = new Error('telemetry failed')
+
+    try {
+      expect(() =>
+        attachZusound(
+          {
+            getState: () => ({ count: 0 }),
+            subscribe: () => {
+              throw new Error('subscribe failed')
+            },
+          },
+          {
+            enabled: true,
+            onError: () => {
+              throw reportingError
+            },
+          }
+        )
+      ).not.toThrow()
+      expect(debugSpy).toHaveBeenCalledWith('Zusound: Error reporting failed', reportingError)
+    } finally {
+      warnSpy.mockRestore()
+      debugSpy.mockRestore()
+    }
+  })
+
+  it('keeps a listener inert when subscribe registers it and then throws', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    let listener: ((current: { count: number }, prev: { count: number }) => void) | undefined
+
+    try {
+      attachZusound<{ count: number }>(
+        {
+          getState: () => ({ count: 0 }),
+          subscribe: (next) => {
+            listener = next
+            throw new Error('subscribe failed after registering')
+          },
+        },
+        { enabled: true }
+      )
+      listener?.({ count: 1 }, { count: 0 })
+
+      expect(listener).toBeDefined()
+      expect(window.AudioContext).not.toHaveBeenCalled()
     } finally {
       warnSpy.mockRestore()
     }
@@ -558,9 +611,61 @@ describe('Zusound Middleware', () => {
         expect(mockAudioContext.close).toHaveBeenCalledTimes(1)
       }
     )
+
+    it.each(cases)(
+      'warns about unknown $name options once, not again when the store is created',
+      ({ wrap }) => {
+        const options = { enabled: true, volum: 0.8 }
+        const store = createStore<{ count: number }>()(wrap(options))
+        try {
+          store.setState({ count: 1 })
+          store.setState({ count: 2 })
+          expect(console.warn).toHaveBeenCalledTimes(1)
+          expect(console.warn).toHaveBeenCalledWith('Zusound: Unknown option keys: volum')
+        } finally {
+          store.zusoundCleanup()
+        }
+      }
+    )
+
+    it('warns about unknown subscriber options once across updates', () => {
+      const configuredZusound = createZusound({ enabled: true, volum: 0.8 } as ZusoundOptions)
+      const store = createStore(() => ({ count: 0 }))
+      const unsubscribe = store.subscribe(configuredZusound)
+      try {
+        store.setState({ count: 1 })
+        store.setState({ count: 2 })
+        expect(console.warn).toHaveBeenCalledTimes(1)
+        expect(console.warn).toHaveBeenCalledWith('Zusound: Unknown option keys: volum')
+      } finally {
+        unsubscribe()
+        configuredZusound.cleanup()
+      }
+    })
   })
 
   describe('Subscriber Usage', () => {
+    it('turns on once the environment resolves to development', () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      const configuredZusound = createZusound()
+      const store = createStore(() => ({ count: 0 }))
+      const unsubscribe = store.subscribe(configuredZusound)
+
+      try {
+        store.setState({ count: 1 })
+        expect(window.AudioContext).not.toHaveBeenCalled()
+
+        vi.stubEnv('NODE_ENV', 'development')
+        store.setState({ count: 2 })
+        expect(window.AudioContext).toHaveBeenCalledTimes(1)
+      } finally {
+        unsubscribe()
+        configuredZusound.cleanup()
+        vi.unstubAllEnvs()
+      }
+      expect(mockAudioContext.close).toHaveBeenCalledTimes(1)
+    })
+
     it('keeps ordinary object states in subscriber mode without option warnings', () => {
       const configuredZusound = createZusound({ enabled: true })
       const store = createStore(() => ({ enabled: false, volume: 0.2, count: 0 }))

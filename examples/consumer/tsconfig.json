@@ -7,5 +7,5 @@
     "noEmit": true,
     "skipLibCheck": false
   },
-  "include": ["smoke.ts", "smoke.cts"]
+  "include": ["smoke.ts", "smoke.cts", "core-smoke.ts"]
 }

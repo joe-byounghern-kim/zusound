@@ -56,9 +56,9 @@ pnpm verify
 
 1. Keep public API and behavioral changes covered by tests.
 2. Run `pnpm verify` before requesting review.
-3. Update `packages/zusound/README.md` and run `pnpm readme:sync` when public usage or options change.
+3. Update `packages/zusound/README.md` and run `pnpm readme:sync` when public usage or options change. Update `packages/core/README.md` when the `@zusound/core` API changes.
 4. Update `demo/src/sections/ApiDocs.tsx` when public API examples or option tables change.
-5. Add a Changeset only when the published `zusound` package needs a release note or version bump.
+5. Add a Changeset only when a published package (`zusound` or `@zusound/core`) needs a release note or version bump. The two packages are a fixed group and always release with the same version.
 
 ## Skills
 

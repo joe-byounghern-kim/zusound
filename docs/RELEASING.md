@@ -5,10 +5,30 @@
 - GitHub environment: `npm-publish`, restricted to `main`
 - Workflow: `.github/workflows/release.yml`
 - Workflow permission: `id-token: write`
-- npm trusted publisher mapping for repository `joe-byounghern-kim/zusound`, workflow `release.yml`, branch `main`, environment `npm-publish`
+- npm trusted publisher mapping on both `zusound` and `@zusound/core` for repository `joe-byounghern-kim/zusound`, workflow `release.yml`, branch `main`, environment `npm-publish`
+- npm organization `zusound`, which owns the `@zusound` scope for `@zusound/core`
 - Optional fallback secret: `NPM_TOKEN`
 
 Local or manual `pnpm version-packages` runs use `@changesets/changelog-github` and require a `GITHUB_TOKEN` environment variable. Do not store it in a committed file. GitHub reserves the `GITHUB_` secret prefix; if a future Actions versioning job needs a PAT override, store it as `CHANGESETS_GITHUB_TOKEN` and map that secret to `GITHUB_TOKEN` for the versioning step. The current tag-only release workflow does not run `changeset version`.
+
+## Packages
+
+The repository publishes two packages from one tag:
+
+- `@zusound/core` (`packages/core`): framework-agnostic diffing and Web Audio cues.
+- `zusound` (`packages/zusound`): the Zustand middleware, which depends on `@zusound/core`.
+
+They form a fixed Changesets group, so both always share one version. `changeset publish` publishes `@zusound/core` before `zusound` and skips any version already on npm.
+
+### First `@zusound/core` release
+
+npm trusted publishing is configured per package and only after the package exists. Before the first release that contains `@zusound/core`:
+
+1. Create the `zusound` npm organization, or confirm the publishing account owns the `@zusound` scope.
+2. Configure `NPM_TOKEN` with publish rights for both `zusound` and the `@zusound` scope.
+3. Push the release tag as usual. The automatic OIDC run fails at `@zusound/core` because it has no trusted publisher yet. Changesets publishes `@zusound/core` before `zusound` and stops at the first failure, so nothing is published.
+4. Start a manual run with `auth_mode=token` for the same tag. The job keeps its `id-token` permission, so both packages are still published with provenance.
+5. Add the `@zusound/core` trusted publisher mapping, then use OIDC for later releases.
 
 ## Preflight
 
@@ -63,9 +83,9 @@ Review and commit the version, changelog, manifest, and lockfile changes through
    ```
 
 3. Verify the `Release` workflow publishes npm provenance and creates the GitHub release.
-4. Confirm `npm view zusound version` returns the released version.
+4. Confirm `npm view zusound version` and `npm view @zusound/core version` both return the released version.
 
-The release workflow validates tag format, tag ancestry from `main`, tag/package-version equality, and whether npm/GitHub already contain the release.
+The release workflow validates tag format, tag ancestry from `main`, tag/package-version equality, that `@zusound/core` has the same version as `zusound`, and whether npm/GitHub already contain the release.
 
 Release validation installs the tag's frozen lockfile and runs the repository quality and security checks. It excludes `deps:check`, which compares development tools with the registry's current latest versions and remains enforced by `pnpm verify` in development CI. Newly published development tools must not block an already reviewed release tag.
 
@@ -89,6 +109,7 @@ Prefer a corrective patch release. If a bad version must be discouraged immediat
 : "${BAD_VERSION:?Set BAD_VERSION to the version to deprecate}"
 : "${CORRECTIVE_VERSION:?Set CORRECTIVE_VERSION to the replacement version}"
 npm deprecate "zusound@$BAD_VERSION" "Deprecated: use $CORRECTIVE_VERSION"
+npm deprecate "@zusound/core@$BAD_VERSION" "Deprecated: use $CORRECTIVE_VERSION"
 ```
 
 For demo rollback, rerun the last known-good `Deploy Demo to GitHub Pages` workflow.

@@ -6,7 +6,7 @@ import type { Change } from './types'
  */
 export interface ChangeBuffer {
   readonly size: number
-  add: (changes: Change[]) => void
+  add: (changes: readonly Change[]) => void
   flush: () => Change[]
   clear: () => void
 }

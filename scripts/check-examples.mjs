@@ -54,6 +54,7 @@ const documents = args.length
   ? [resolve(args[1])]
   : [
       join(root, 'README.md'),
+      join(root, 'packages/core/README.md'),
       join(root, 'packages/zusound/README.md'),
       join(root, 'docs/API.md'),
       ...markdownFiles(join(root, '.agents')),
@@ -91,6 +92,8 @@ try {
         skipLibCheck: false,
         jsx: 'react-jsx',
         types: ['node', 'react'],
+        // The demo's node_modules has no direct @zusound/core link; use the built workspace package.
+        paths: { '@zusound/core': [join(root, 'packages/core/dist/index.d.ts')] },
       },
       include: ['*.ts', '*.tsx'],
     })

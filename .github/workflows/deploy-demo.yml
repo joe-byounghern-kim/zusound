@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/deploy-demo.yml'
       - 'demo/**'
+      - 'packages/core/**'
       - 'packages/zusound/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
@@ -42,8 +43,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build library
-        run: pnpm -C packages/zusound build
+      - name: Build libraries
+        run: pnpm --filter zusound... build
 
       - name: Validate and build demo
         run: |

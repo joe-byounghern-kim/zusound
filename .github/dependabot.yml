@@ -4,6 +4,7 @@ updates:
     directories:
       - /
       - /demo
+      - /packages/core
       - /packages/zusound
     schedule:
       interval: weekly

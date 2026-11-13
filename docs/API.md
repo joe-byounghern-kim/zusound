@@ -255,8 +255,13 @@ All fields are optional. Supply options to `zusound(initializer, options)` or
 
 ## Public types
 
-Import types from `zusound`. The public declarations are in
-[`types.ts`](../packages/zusound/src/types.ts).
+Import types from `zusound`. The store-facing types are declared in
+[`packages/zusound/src/types.ts`](../packages/zusound/src/types.ts).
+`ZusoundOptions` extends `SonifierOptions`, which declares every option field.
+`SonifierOptions`, `Change`, `SoundParams`, `AestheticParams`, and
+`ZusoundErrorContext` are declared in
+[`packages/core/src/types.ts`](../packages/core/src/types.ts); `zusound`
+re-exports all of them except `SonifierOptions`.
 
 ### `AestheticParams`
 
@@ -453,3 +458,18 @@ with `console.debug` instead.
 For a missing cue, confirm explicit enablement, a real post-gesture top-level
 update, active wiring, and teardown state before tuning. See the
 [debugging skill](../.agents/skills/zusound-debugging/SKILL.md) for a focused workflow.
+
+## Without Zustand: `@zusound/core`
+
+`zusound` is a thin Zustand adapter over
+[`@zusound/core`](../packages/core/README.md), which owns change detection,
+debounce, playback, and the shared `AudioContext`. Use the core package directly
+for any other state source:
+
+- `createSonifier(options?)` accepts the same options as `ZusoundOptions` and
+  returns a `Sonifier` with `update(current, prev)`, `play(changes)`, and
+  `dispose()`.
+- `detectChanges(next, prev)` returns the same top-level `Change` descriptors
+  described in [Detected changes](#detected-changes).
+
+Both packages are released together with the same version number.

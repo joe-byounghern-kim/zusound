@@ -1,4 +1,4 @@
-import type { ZusoundErrorContext, ZusoundOptions } from './types'
+import type { SonifierOptions, ZusoundErrorContext } from './types'
 
 /**
  * Deliver diagnostic errors without allowing telemetry failures to affect state
@@ -8,7 +8,7 @@ import type { ZusoundErrorContext, ZusoundOptions } from './types'
 export function reportError(
   error: unknown,
   context: ZusoundErrorContext,
-  onError?: ZusoundOptions['onError']
+  onError?: SonifierOptions['onError']
 ): void {
   try {
     onError?.(error, context)

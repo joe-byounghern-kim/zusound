@@ -6,7 +6,7 @@
  * interval, timbre, and timing. All playback failures are non-fatal.
  */
 
-import type { AestheticParams, Change, SoundParams, ZusoundOptions } from './types'
+import type { AestheticParams, Change, SonifierOptions, SoundParams } from './types'
 import { MAX_HARMONICS } from './constants'
 import { clamp01, finiteOr, lerp, midiToHz } from './math'
 import { createTimbreWave } from './synthesis'
@@ -74,11 +74,11 @@ export function cleanupAudio(): void {
 
 type PlaySoundOptions = {
   globalVolume?: number
-  aesthetics?: ZusoundOptions['aesthetics']
-  mapChangeToAesthetics?: ZusoundOptions['mapChangeToAesthetics']
-  soundMapping?: ZusoundOptions['soundMapping']
+  aesthetics?: SonifierOptions['aesthetics']
+  mapChangeToAesthetics?: SonifierOptions['mapChangeToAesthetics']
+  soundMapping?: SonifierOptions['soundMapping']
   performanceMode?: boolean
-  onError?: ZusoundOptions['onError']
+  onError?: SonifierOptions['onError']
   startOffset?: number
   isPlaybackActive?: () => boolean
 }
