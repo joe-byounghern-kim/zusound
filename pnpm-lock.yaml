@@ -23,8 +23,8 @@ importers:
         specifier: ^0.18.5
         version: 0.18.5
       '@bugron/validate-dependabot-yaml':
-        specifier: ^0.3.3
-        version: 0.3.3
+        specifier: ^0.3.4
+        version: 0.3.4
       '@changesets/changelog-github':
         specifier: ^1.0.1
         version: 1.0.1
@@ -247,8 +247,8 @@ packages:
     resolution: {integrity: sha512-0GEz8qJWokkUVYQYRukmkSHIFNoBH8QTreeHrAFbvz1XFYc3Y+puhMs8PQ5x8GNugiC2l5jvDBXKLbBIByeSBw==}
     hasBin: true
 
-  '@bugron/validate-dependabot-yaml@0.3.3':
-    resolution: {integrity: sha512-0dGK8mW40e+56PMZg6lfoVa7WyQ6YjAXH2HxznL0sN2tNRhea8mfmuRAoHe+I1RhNAM6EO+uEPSX+/nzQbvaiw==}
+  '@bugron/validate-dependabot-yaml@0.3.4':
+    resolution: {integrity: sha512-aq+lZqh85yUgxaF2mGCjub9NCiAWvEwbIs/uxaLGB3GUoKDndlSsVtQx/CycyiTS4z4Z4wT0edBklJCszdTDbA==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -2660,7 +2660,7 @@ snapshots:
     dependencies:
       css-tree: 3.2.1
 
-  '@bugron/validate-dependabot-yaml@0.3.3':
+  '@bugron/validate-dependabot-yaml@0.3.4':
     dependencies:
       ajv: 6.15.0
       node-fetch: 2.6.7
